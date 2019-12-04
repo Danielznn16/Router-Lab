@@ -48,9 +48,9 @@
 
 bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output) {
   // TODO:
-  
+  int data_len =(packet[0] & 0xf) * 4;
   int data = (((int)packet[2] << 8) + packet[3] - (packet[0] & 0xf) * 4 - 4 ) / 20;
-  if(((int)( packet[2] << 8)+ (int)packet[3]>len)||((int)(packet[30] << 8)+(int)packet[31] != 0))return false;
+  if(((int)( packet[2] << 8)+ (int)packet[3]>data_len)||((int)(packet[30] << 8)+(int)packet[31] != 0))return false;
   output->numEntries = 0;
   output->command = packet[28];
   if(!((packet[28] == 0x2 || packet[28] == 0x1) && packet[29] == 0x2))return false;

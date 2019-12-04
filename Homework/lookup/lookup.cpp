@@ -1,7 +1,10 @@
 #include "router.h"
 #include <stdint.h>
 #include <stdlib.h>
-
+#include<vector>
+#include <string>
+#include <sstream>
+#include <iostream>
 /*
   RoutingTable Entry 的定义如下：
   typedef struct {
@@ -17,6 +20,8 @@
   当 nexthop 为零时这是一条直连路由。
   你可以在全局变量中把路由表以一定的数据结构格式保存下来。
 */
+using namespace std;
+vector<RoutingTableEntry> routs;
 
 /**
  * @brief 插入/删除一条路由表表项
@@ -27,7 +32,22 @@
  * 删除时按照 addr 和 len 匹配。
  */
 void update(bool insert, RoutingTableEntry entry) {
-  // TODO:
+	int index = -1;
+	for(int i = 0; i < routs.size(); i++)
+		if(routs.at(i).addr==entry.addr && routs.at(i).len==entry.len){
+			index = i;
+			i = routs.size();
+		}
+	if(insert){
+		if(index == -1)
+			routs.push_back(entry);
+		else{
+			routs.at(index).nexthop = entry.nexthop;
+			routs.at(index).if_index = entry.if_index;
+		}
+	}else{	
+		routs.erase(index+routs.begin());
+	}
 }
 
 /**
@@ -38,8 +58,25 @@ void update(bool insert, RoutingTableEntry entry) {
  * @return 查到则返回 true ，没查到则返回 false
  */
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index) {
-  // TODO:
-  *nexthop = 0;
-  *if_index = 0;
-  return false;
+		string addrString;
+		{
+			stringstream ss;
+			ss << hex << (int)addr;
+			addrString = ss.str();
+		}
+		// cout << "addrString: " << addrString << endl;
+		int maxlen = -1;
+		for(int i = 0; i < routs.size(); i++){
+			string routString;
+			stringstream ss;
+			ss << hex << (int)(routs.at(i).addr);
+			routString = ss.str();
+			// cout << "routString: " << routString <<"|"<<(addrString.find(routString)!=-1)<<"|"<<(maxlen < routString.length())<<"|"<<maxlen<<"|"<<routString.length()<< endl;
+			if(((addrString.find(routString))!=-1) && (maxlen < (int)routString.length())){
+				maxlen = (int)routString.length();
+				*nexthop = routs.at(i).nexthop;
+				*if_index = routs.at(i).if_index;
+			}
+		}
+	  return (maxlen!=-1);
 }

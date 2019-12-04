@@ -7,7 +7,7 @@
   #define RIP_MAX_ENTRY 25
   typedef struct {
     // all fields are big endian
-    // we don't store 'family', as it is always 2(response) and 0(request)
+    // we don't store 'family', as it is always 2(for response) and 0(for request)
     // we don't store 'tag', as it is always 0
     uint32_t addr;
     uint32_t mask;
@@ -39,49 +39,45 @@
  * IP 包的 Total Length 长度可能和 len 不同，当 Total Length 大于 len 时，把传入的 IP 包视为不合法。
  * 你不需要校验 IP 头和 UDP 的校验和是否合法。
  * 你需要检查 Command 是否为 1 或 2，Version 是否为 2， Zero 是否为 0，
- * Family 和 Command 是否有正确的对应关系，Tag 是否为 0，
+ * Family 和 Command 是否有正确的对应关系（见上面结构体注释），Tag 是否为 0，
  * Metric 转换成小端序后是否在 [1,16] 的区间内，
  * Mask 的二进制是不是连续的 1 与连续的 0 组成等等。
  */
-
-
-
 bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output) {
-  // TODO:
   
-  int data = (((int)packet[2] << 8) + packet[3] - (packet[0] & 0xf) * 4 - 4 ) / 20;
-  if(((int)( packet[2] << 8)+ (int)packet[3]>len)||((int)(packet[30] << 8)+(int)packet[31] != 0))return false;
+  if( ((  (int)(packet[2] << 8)  + (int)(packet[3])) >  len)||(( (int)(packet[30] << 8) + (int)(packet[31]))!=0))return false;
+  int data = ((int)packet[2] << 8 + packet[3] - (packet[0] & 0xf) * 4) / 24;
   output->numEntries = 0;
   output->command = packet[28];
-  if(!((packet[28] == 0x2 || packet[28] == 0x1) && packet[29] == 0x2))return false;
-  for(int i = 0; i < data; i++){
-    int data_t = ((int)packet[i*20+32] << 8) + packet[i*20+33];
-    int data_met = ((int)packet[i*20+48]<<24)+((int)packet[i*20+49]<<16)+((int)packet[i*20+50]<<8)+packet[i*20+51];
-    if(!((packet[28] == 0x2 && data_t == 0x2) || (packet[28] == 0x1 && data_t == 0x0))||(!(data_met <= 16 && data_met >= 1)))return false;
-    int data_set = ((int)packet[i*20+40]<<24)+((int)packet[i*20+41]<<16)+((int)packet[i*20+42]<<8)+packet[i*20+43];
+  bool jud  = false;
+  if(!((packet[28] == 2 || packet[28] == 1) && packet[29] == 2))return false;
+  for(int i = 0;i < data;i ++){
+    int data_t =  (int)(packet[i*20+32] << 8) + packet[i*20+33];
+    if(!((packet[28] == 2&& data_t==2)||(packet[28] == 1&& data_t == 0)) )return false;
+    int data_met = (int)packet[i*20+48]<<24+(int)packet[i*20+49]<<16+(int)packet[i*20+50]<<8+packet[i*20+51];
+    if(!(data_met<=16 && data_met >=1))return false;
+    int data_set = (int)packet[i*20+40]<<24+(int)packet[i*20+41]<<16+(int)packet[i*20+42]<<8+packet[i*20+43];
     int cur = data_set & 0xf;
     int pre = cur;
     int num = 0;
-    for(int i = 1;i < 8;i ++){
-        data_set = data_set >> 4;
-        cur = data_set & 0xf;
-        if(cur != pre){
-            num ++;
-        }
+    for(int i = 0;i < 8;i ++){
+      data_set = data_set >> 4;
+      cur = data_set & 0xf;
+      if(cur != pre )
+        num ++;
         pre = cur;
     }
-    if(num == 0 || num ==1){
+    if(num == 0 || num == 1){
       int set_num = output->numEntries;
-      output->entries[set_num].addr = ((int)packet[i*20+39]<<24)+((int)packet[i*20+38]<<16)+((int)packet[i*20+37]<<8)+packet[i*20+36];
-      output->entries[set_num].mask = ((int)packet[i*20+43]<<24)+((int)packet[i*20+42]<<16)+((int)packet[i*20+41]<<8)+packet[i*20+40];
-      output->entries[set_num].metric = ((int)packet[i*20+51]<<24)+((int)packet[i*20+50]<<16)+((int)packet[i*20+49]<<8)+packet[i*20+48];
-      output->entries[set_num].nexthop = ((int)packet[i*20+47]<<24)+((int)packet[i*20+46]<<16)+((int)packet[i*20+45]<<8)+packet[i*20+44];
+      output->entries[set_num].addr = (int)packet[i*20+39]<<24+(int)packet[i*20+38]<<16+(int)packet[i*20+37]<<8+packet[i*20+36];
+      output->entries[set_num].mask = (int)packet[i*20+43]<<24+(int)packet[i*20+42]<<16+(int)packet[i*20+41]<<8+packet[i*20+40];
+      output->entries[set_num].metric = (int)packet[i*20+51]<<24+(int)packet[i*20+50]<<16+(int)packet[i*20+49]<<8+packet[i*20+48];
+      output->entries[set_num].nexthop = (int)packet[i*20+47]<<24+(int)packet[i*20+46]<<16+(int)packet[i*20+45]<<8+packet[i*20+44];
       output->numEntries++;
     }
-    else {
-        return false;
-    }   
+    else return false;
   }
+  // TODO:
   return true;
 }
 
@@ -92,7 +88,7 @@ bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output) {
  * @return 写入 buffer 的数据长度
  * 
  * 在构造二进制格式的时候，你需要把 RipPacket 中没有保存的一些固定值补充上，包括 Version、Zero、Address Family 和 Route Tag 这四个字段
- * 你写入 buffer 的数据长度和返回值都应该是四个字节的 RIP 头，加上每项 20 字节。
+ * 你写入 buffer 的数据长度和返回值都       3应该是四个字节的 RIP 头，加上每项 20 字节。
  * 需要注意一些没有保存在 RipPacket 结构体内的数据的填写。
  */
 uint32_t assemble(const RipPacket *rip, uint8_t *buffer) {
@@ -101,14 +97,13 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer) {
   buffer[1] = 0x2;
   buffer[2] = 0x0;
   buffer[3] = 0x0;
-  int num = rip->numEntries;
   
-  for(int i = 0;i < num;i ++){
+  for(int i = 0;i < rip->numEntries;i ++){
     buffer[4+i*20] = 0x0;
-    if(rip->command == 0x2)buffer[i*20+5] = 0x2;
-    else buffer[i*20+5] = 0x0;
-    buffer[i*20+6] = 0x0;
-    buffer[i*20+7] = 0x0;
+    if(rip->command == 2)buffer[i*20+5] = 2;
+    else buffer[i*20+5] = 0;
+    buffer[i*20+6] = 0;
+    buffer[i*20+7] = 0;
     buffer[i*20+8] = rip->entries[i].addr;
     buffer[i*20+9] = rip->entries[i].addr>>8;
     buffer[i*20+10] = rip->entries[i].addr>>16;
