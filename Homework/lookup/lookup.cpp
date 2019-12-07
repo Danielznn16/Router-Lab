@@ -22,7 +22,9 @@
 */
 using namespace std;
 vector<RoutingTableEntry> routs;
-
+vector<RoutingTableEntry> getRoutingTableEntry(){
+	return routs;
+}
 /**
  * @brief 插入/删除一条路由表表项
  * @param insert 如果要插入则为 true ，要删除则为 false
@@ -44,6 +46,7 @@ void update(bool insert, RoutingTableEntry entry) {
 		else{
 			routs.at(index).nexthop = entry.nexthop;
 			routs.at(index).if_index = entry.if_index;
+			routs.at(index).metric = entry.metric;
 		}
 	}else{	
 		routs.erase(index+routs.begin());
@@ -57,7 +60,8 @@ void update(bool insert, RoutingTableEntry entry) {
  * @param if_index 如果查询到目标，把表项的 if_index 写入
  * @return 查到则返回 true ，没查到则返回 false
  */
-bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index) {
+uint32_t placeholder_metric;
+bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric = &placeholder_metric) {
 		string addrString;
 		{
 			stringstream ss;
@@ -76,6 +80,7 @@ bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index) {
 				maxlen = (int)routString.length();
 				*nexthop = routs.at(i).nexthop;
 				*if_index = routs.at(i).if_index;
+				*metric = routs.at(i).metric;
 			}
 		}
 	  return (maxlen!=-1);

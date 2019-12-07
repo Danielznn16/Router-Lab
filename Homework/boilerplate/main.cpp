@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <vector>
+using namespace std;
 extern bool validateIPChecksum(uint8_t *packet, size_t len);
 extern void update(bool insert, RoutingTableEntry entry);
 extern bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index);
@@ -21,7 +22,42 @@ uint8_t output[2048];
 // 3: 10.0.3.1
 // 你可以按需进行修改，注意端序
 in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
+uint32_t len2(uint32_t len){
+  uint32_t re = 0;
+  for(int i = 0; i < 31;i++){
+    re = (re+(i > len-1)?1:0) << 1;
+  }
+  if(len == 32)
+    re ++;
+  return re;
+}
 
+uint32_t reverseLen(uint32_t len){
+  uint32_t re = 0;
+  while(len > 0){
+    re++;
+    len = len<<1;
+  }
+}
+
+uint32_t convertEndian(uint32_t tmp){
+  uint8_t* re = (uint8_t*)(&tmp);
+  swap(re[0],re[3]);
+  swap(re[1],re[2]);
+  return *((uint32_t*)re);
+}
+
+uint16_t getChecksum(uint8_t *packet,int leng) {
+  // TODO:
+  unsigned long long check = 0;
+  for(unsigned long long tmp = 0; tmp < leng; tmp++){
+    check += (((leng-1) - tmp)%2 == 0)?packet[tmp]:(((int)packet[tmp])<<8);
+  }
+  while((check > (1<<16)))
+    check = (check>>16) + (check&0xffff);
+  unsigned short re = ~check;
+  return re;
+}
 int main(int argc, char *argv[]) {
   int res = HAL_Init(1, addrs);
   if (res < 0) {
@@ -39,7 +75,8 @@ int main(int argc, char *argv[]) {
       .addr = addrs[i], // big endian
       .len = 24, // small endian
       .if_index = i, // small endian
-      .nexthop = 0 // big endian, means direct
+      .nexthop = 0, // big endian, means direct
+      .metric = 1
     };
     update(true, entry);
   }
@@ -77,6 +114,8 @@ int main(int argc, char *argv[]) {
     in_addr_t src_addr, dst_addr;
     // extract src_addr and dst_addr from packet
     // big endian
+    memcpy(dst_addr, &packet[16], sizeof(in_addr_t));
+    memcpy(src_addr, &packet[12], sizeof(in_addr_t));
 
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
@@ -86,7 +125,6 @@ int main(int argc, char *argv[]) {
       }
     }
     // TODO: Handle rip multicast address?
-
     if (dst_is_me) {
       // TODO: RIP?
       RipPacket rip;
@@ -94,25 +132,198 @@ int main(int argc, char *argv[]) {
         if (rip.command == 1) {
           // request
           RipPacket resp;
+          std::vector<RoutingTableEntry> routingTableEntry = getRoutingTableEntry();
+          //assign cmd && routingTableEntry's size
+          resp.command = 2;
+          resp.numEntries = routingTableEntry.size();
+          for(int i = 0; i < routingTableEntry.size();i++){
+            RipEntry etr;
+            etr.addr = routingTableEntry[i].addr;
+            etr.nexthop = routingTableEntry[i].nexthop;
+            etr.mask = convertEndian(len2(routingTableEntry[i].len));
+            etr.metric = convertEndian((uint32_t)1);
+            resp.entries[i] = etr;
+          }
           // TODO: fill resp
           // assemble
           // IP
           output[0] = 0x45;
+          output[1] = 0x00;
+
+          output[4] = 0x00;
+          output[5] = 0x00;
+          output[6] = 0x00;
+          output[7] = 0x00;
+
+          output[8] = 0x01;
+          output[9] = 0x11;
+          // checkSUM
+          uint16_t* output16 = (uint16_t*)output;
+          //src ip addr
+          output16[5] = 0x0000;
+          uint32_t* outputAddr = (uint32_t*)output;
+          outputAddr[4] = src_addr;
+          outputAddr[3] = dst_addr;
           // ...
           // UDP
           // port = 520
           output[20] = 0x02;
           output[21] = 0x08;
+
+          output[22] = 0x02;
+          output[23] = 0x08;
+
           // ...
           // RIP
-          uint32_t rip_len = assemble(&rip, &output[20 + 8]);
+          uint32_t rip_len = assemble(&resp, &output[20 + 8]);
+          output16[1] = rip_len + 28;//total length
+          output16[5] = getChecksum(output,20);
+          output16[12] = rip_len + 8;//UDP length
+          output16[13] = 0;
+          {
+            uint32_t tmp2 = src_addr + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
+            tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+            output16[13] = (unsigned short)(~tmp2);
+          }
+          std::printf("%ud",src_addr);
           // checksum calculation for ip and udp
           // if you don't want to calculate udp checksum, set it to zero
           // send it back
           HAL_SendIPPacket(if_index, output, rip_len + 20 + 8, src_mac);
         } else {
           // response
-          // TODO: use query and update
+          // TODO: use query and updatec
+          std::vector<RoutingTableEntry> failers;
+          for(int i = 0; i < rip.numEntries; i++){
+            RoutingTableEntry etr;
+            etr.addr = rip.entries[i].addr;
+            etr.nexthop = rip.entries[i].nexthop;
+            etr.len = reverseLen(convertEndian(rip.entries[i].mask));
+            etr.metric = rip.entries + 1;
+            etr.if_index = if_index;
+            if(rip.entries[i].metric + 1 > 16){
+              //delete route
+              update(false,etr);
+              failers.push_back(etr);
+            } else {
+              uint32_t search_if_index,search_nexthop,search_metric;
+              if(query(etr.addr, &search_nexthop, &search_if_index, &search_metric)){
+                if(etr.metric <= search_metric)
+                  update(true,etr);
+              }else{
+                update(true,etr);
+              }
+            }
+          }
+
+          //fails
+          RipPacket fails;
+          fails.numEntries = failers.size();
+          for(int i = 0; i < failers.size();i++){
+            RipEntry etr;
+            etr.addr = failers[i].addr;
+            etr.nexthop = failers[i].nexthop;
+            etr.mask = convertEndian(len2(failers[i].len));
+            etr.metric = convertEndian((uint32_t)1);
+            fails.entries[i] = etr;
+          }
+
+          //routing table
+          RipPacket routingTableEntry;
+          fails.numEntries = routingTableEntry.size();
+          for(int i = 0; i < routingTableEntry.size();i++){
+            RipEntry etr;
+            etr.addr = routingTableEntry[i].addr;
+            etr.nexthop = routingTableEntry[i].nexthop;
+            etr.mask = convertEndian(len2(routingTableEntry[i].len));
+            etr.metric = convertEndian((uint32_t)1);
+            fails.entries[i] = etr;
+          }
+
+          //assign
+
+
+          output[0] = 0x45;
+          output[1] = 0x00;
+
+          output[4] = 0x00;
+          output[5] = 0x00;
+          output[6] = 0x00;
+          output[7] = 0x00;
+
+          output[8] = 0x01;
+          output[9] = 0x11;
+          output[20] = 0x02;
+          output[21] = 0x08;
+
+          output[22] = 0x02;
+          output[23] = 0x08;
+          uint32_t* outputAddr = (uint32_t*)output;
+          outputAddr[3] = dst_addr;
+
+          uint16_t* output16 = (uint16_t*)output;
+
+          //send failures
+          if(!failures.empty())
+            for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+              if(i!= if_index){
+                outputAddr[4] = addrs[i];
+                output16[5] = 0x0000;
+                uint32_t rip_len = assemble(&failers, &output[20 + 8]);
+                output16[1] = rip_len + 28;//total length
+                output16[5] = getChecksum(output,20);
+                output16[12] = rip_len + 8;//UDP length
+                output16[13] = 0;
+                {
+                  uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
+                  tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+                  output16[13] = (unsigned short)(~tmp2);
+                }
+                HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
+              }
+            }
+
+          //send Routing
+
+          {
+            output[0] = 0x45;
+            output[1] = 0x00;
+
+            output[4] = 0x00;
+            output[5] = 0x00;
+            output[6] = 0x00;
+            output[7] = 0x00;
+
+            output[8] = 0x01;
+            output[9] = 0x11;
+            output[20] = 0x02;
+            output[21] = 0x08;
+
+            output[22] = 0x02;
+            output[23] = 0x08;
+            uint32_t* outputAddr = (uint32_t*)output;
+            outputAddr[3] = dst_addr;
+
+            uint16_t* output16 = (uint16_t*)output;
+
+            //send failures
+            for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+              outputAddr[4] = addrs[i];
+              output16[5] = 0x0000;
+              uint32_t rip_len = assemble(&routingTableEntry, &output[20 + 8]);
+              output16[1] = rip_len + 28;//total length
+              output16[5] = getChecksum(output,20);
+              output16[12] = rip_len + 8;//UDP length
+              output16[13] = 0;
+              {
+                uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
+                tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+                output16[13] = (unsigned short)(~tmp2);
+              }
+              HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
+            }
+            //TODO: print
+          }
         }
       } else {
         // forward
