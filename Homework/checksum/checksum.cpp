@@ -7,17 +7,17 @@
  * @param len 即 packet 的长度，单位是字节，保证包含完整的 IP 头
  * @return 校验和无误则返回 true ，有误则返回 false
  */
-bool validateIPChecksum(uint8_t *packet, size_t len) {
-  // TODO:
-	unsigned long long check = 0;
-	int leng = (int)(packet[0]&0xf)*4;
-	for(unsigned long long tmp = 0; tmp < leng; tmp++){
-		check += (((leng-1) - tmp)%2 == 0)?packet[tmp]:(((int)packet[tmp])<<8);
-	}
-	while((check > (1<<16)))
-		check = (check>>16) + (check&0xffff);
-    unsigned short re = ~check;
-  return re==0x0000;
+// bool validateIPChecksum(uint8_t *packet, size_t len) {
+//   // TODO:
+// 	unsigned long long check = 0;
+// 	int leng = (int)(packet[0]&0xf)*4;
+// 	for(unsigned long long tmp = 0; tmp < leng; tmp++){
+// 		check += (((leng-1) - tmp)%2 == 0)?packet[tmp]:(((int)packet[tmp])<<8);
+// 	}
+// 	while((check > (1<<16)))
+// 		check = (check>>16) + (check&0xffff);
+//     unsigned short re = ~check;
+//   return re==0x0000;
 	// size_t nleft = len;
  //    uint32_t sum = 0;
  //    uint16_t *w=(uint16_t *)packet;
