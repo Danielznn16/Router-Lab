@@ -13,7 +13,8 @@ extern bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index);
 extern bool forward(uint8_t *packet, size_t len);
 extern bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output);
 extern uint32_t assemble(const RipPacket *rip, uint8_t *buffer);
-
+extern vector<RoutingTableEntry> getRoutingTableEntry();
+bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
 uint8_t packet[2048];
 uint8_t output[2048];
 // 0: 10.0.0.1
@@ -22,10 +23,12 @@ uint8_t output[2048];
 // 3: 10.0.3.1
 // 你可以按需进行修改，注意端序
 in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
+in_addr_t multicast_address = 0x090000e0;
+macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicasting mac address 01:00:5e:00:00:09
 uint32_t len2(uint32_t len){
   uint32_t re = 0;
   for(int i = 0; i < 31;i++){
-    re = (re+(i > len-1)?1:0) << 1;
+    re = (re+((i > len-1)?1:0)) << 1;
   }
   if(len == 32)
     re ++;
@@ -38,6 +41,7 @@ uint32_t reverseLen(uint32_t len){
     re++;
     len = len<<1;
   }
+  return re;
 }
 
 uint32_t convertEndian(uint32_t tmp){
@@ -84,9 +88,73 @@ int main(int argc, char *argv[]) {
   uint64_t last_time = 0;
   while (1) {
     uint64_t time = HAL_GetTicks();
+    uint16_t* output16 = (uint16_t*)output;
+    uint32_t* outputAddr = (uint32_t*)output;
     if (time > last_time + 30 * 1000) {
       // What to do?
       printf("Timer\n");
+
+
+      std::vector<RoutingTableEntry> table = getRoutingTableEntry();
+      RipPacket ripPack;
+      ripPack.numEntries = table.size();
+      ripPack.command = 2;
+      for(int i = 0; i < ripPack.numEntries; i++){
+        RipEntry ripE;
+        ripE.addr = table.at(i).addr;
+        ripE.mask = __builtin_bswap32 (convertEndian(table.at(i).len));
+        ripE.metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
+        ripE.nexthop = table.at(i).nexthop;
+        ripPack.entries[i] = ripE;
+      }
+
+
+      output[0] = 0x45;
+
+      // Differentiated Service Field
+      output[1] = 0x00;
+      
+      // Id
+      output16[2] = 0x0000;
+      
+      // Flags
+      output16[3] = 0x0000;
+
+      // TTL & protocol
+      output16[4] = 0x0111;
+
+      // UDP
+      // port = 520
+      output16[10] = 0x0208;
+
+      // port = 520
+      output16[11] = 0x0208;
+
+      outputAddr[4] = multicast_address;
+
+      for(int i=0; i<N_IFACE_ON_BOARD; i++) {
+        // Src addr
+        outputAddr[3] = addrs[i];
+
+        uint32_t rip_len = assemble(&ripPack, &output[20 + 8]);
+
+        // Total Length
+        output16[1] = rip_len+28;
+
+        // UDP len
+        output16[12] = rip_len+8;
+
+        // ip checksum
+        output16[5] = 0x0000;
+        unsigned short sum = getChecksum(output, 20);
+        output16[5] = sum;
+
+        // udp checksum
+        sum = getChecksum(&(output[8]), 8+rip_len);
+        output16[13] = sum;
+        HAL_SendIPPacket(i, output, rip_len + 20 + 8, multicast_mac_addr);
+      }
+      last_time = time;
     }
 
     int mask = (1 << N_IFACE_ON_BOARD) - 1;
@@ -114,9 +182,10 @@ int main(int argc, char *argv[]) {
     in_addr_t src_addr, dst_addr;
     // extract src_addr and dst_addr from packet
     // big endian
-    memcpy(dst_addr, &packet[16], sizeof(in_addr_t));
-    memcpy(src_addr, &packet[12], sizeof(in_addr_t));
-
+    memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
+    memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
+    src_addr = __builtin_bswap32(src_addr);
+    dst_addr = __builtin_bswap32(dst_addr);
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
       if (memcmp(&dst_addr, &addrs[i], sizeof(in_addr_t)) == 0) {
@@ -158,10 +227,8 @@ int main(int argc, char *argv[]) {
           output[8] = 0x01;
           output[9] = 0x11;
           // checkSUM
-          uint16_t* output16 = (uint16_t*)output;
           //src ip addr
           output16[5] = 0x0000;
-          uint32_t* outputAddr = (uint32_t*)output;
           outputAddr[4] = src_addr;
           outputAddr[3] = dst_addr;
           // ...
@@ -182,10 +249,10 @@ int main(int argc, char *argv[]) {
           output16[13] = 0;
           {
             uint32_t tmp2 = src_addr + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-            tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+            tmp2 = (tmp2>>16) + (tmp2&0xffff);
             output16[13] = (unsigned short)(~tmp2);
           }
-          std::printf("%ud",src_addr);
+          printf("%ud",src_addr);
           // checksum calculation for ip and udp
           // if you don't want to calculate udp checksum, set it to zero
           // send it back
@@ -199,7 +266,7 @@ int main(int argc, char *argv[]) {
             etr.addr = rip.entries[i].addr;
             etr.nexthop = rip.entries[i].nexthop;
             etr.len = reverseLen(convertEndian(rip.entries[i].mask));
-            etr.metric = rip.entries + 1;
+            etr.metric = rip.entries[i].metric + 1;
             etr.if_index = if_index;
             if(rip.entries[i].metric + 1 > 16){
               //delete route
@@ -229,15 +296,16 @@ int main(int argc, char *argv[]) {
           }
 
           //routing table
-          RipPacket routingTableEntry;
-          fails.numEntries = routingTableEntry.size();
+          RipPacket routs;
+          std::vector<RoutingTableEntry> routingTableEntry = getRoutingTableEntry();
+          routs.numEntries = routingTableEntry.size();
           for(int i = 0; i < routingTableEntry.size();i++){
             RipEntry etr;
             etr.addr = routingTableEntry[i].addr;
             etr.nexthop = routingTableEntry[i].nexthop;
             etr.mask = convertEndian(len2(routingTableEntry[i].len));
             etr.metric = convertEndian((uint32_t)1);
-            fails.entries[i] = etr;
+            routs.entries[i] = etr;
           }
 
           //assign
@@ -264,19 +332,19 @@ int main(int argc, char *argv[]) {
           uint16_t* output16 = (uint16_t*)output;
 
           //send failures
-          if(!failures.empty())
+          if(!failers.empty())
             for(int i = 0; i < N_IFACE_ON_BOARD; i++){
               if(i!= if_index){
                 outputAddr[4] = addrs[i];
                 output16[5] = 0x0000;
-                uint32_t rip_len = assemble(&failers, &output[20 + 8]);
+                uint32_t rip_len = assemble(&fails, &output[20 + 8]);
                 output16[1] = rip_len + 28;//total length
                 output16[5] = getChecksum(output,20);
                 output16[12] = rip_len + 8;//UDP length
                 output16[13] = 0;
                 {
                   uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-                  tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+                  tmp2 = (tmp2>>16) + (tmp2&0xffff);
                   output16[13] = (unsigned short)(~tmp2);
                 }
                 HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
@@ -310,14 +378,14 @@ int main(int argc, char *argv[]) {
             for(int i = 0; i < N_IFACE_ON_BOARD; i++){
               outputAddr[4] = addrs[i];
               output16[5] = 0x0000;
-              uint32_t rip_len = assemble(&routingTableEntry, &output[20 + 8]);
+              uint32_t rip_len = assemble(&routs, &output[20 + 8]);
               output16[1] = rip_len + 28;//total length
               output16[5] = getChecksum(output,20);
               output16[12] = rip_len + 8;//UDP length
               output16[13] = 0;
               {
                 uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-                tmp2 = (tmp2>>16) + (tmp2&&0xffff);
+                tmp2 = (tmp2>>16) + (tmp2&0xffff);
                 output16[13] = (unsigned short)(~tmp2);
               }
               HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
@@ -328,8 +396,8 @@ int main(int argc, char *argv[]) {
       } else {
         // forward
         // beware of endianness
-        uint32_t nexthop, dest_if;
-        if (query(src_addr, &nexthop, &dest_if)) {
+        uint32_t nexthop, dest_if, b3_metric;
+        if (query(src_addr, &nexthop, &dest_if, &b3_metric)) {
           // found
           macaddr_t dest_mac;
           // direct routing
@@ -342,9 +410,28 @@ int main(int argc, char *argv[]) {
             // update ttl and checksum
             forward(output, res);
             // TODO: you might want to check ttl=0 case
+            if(output[8] == 0x00){
+              output[0] = 0x0b;
+              output[1] = 0x00;
+
+              // ICMP checksum
+              output16[1] = 0x0000;
+
+              outputAddr[1] = 0x00000000;
+
+              // assign IP's head with 64bit data
+              for (int i=0; i<28; i++) {
+                output[i+8] = packet[i];
+              }
+
+              unsigned short sum = getChecksum(output, 36);
+              output16[1] = sum;
+              HAL_SendIPPacket(if_index, output, 36, dest_mac);
+            }
             HAL_SendIPPacket(dest_if, output, res, dest_mac);
           } else {
             // not found
+            printf("mac address unfound for dst_if:\t%u nexthop:\t%u dst_mac:\t%u\n", src_addr,nexthop,dest_if);
           }
         } else {
           // not found
