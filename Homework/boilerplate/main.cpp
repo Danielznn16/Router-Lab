@@ -288,49 +288,49 @@ int main(int argc, char *argv[]) {
             HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
           }
         }
-      } else {
-        // forward
-        // beware of endianness
-        uint32_t nexthop, dest_if, b3_metric;
-        if (query(src_addr, &nexthop, &dest_if, &b3_metric)) {
-          // found
-          macaddr_t dest_mac;
-          // direct routing
-          if (nexthop == 0) {
-            nexthop = dst_addr;
-          }
-          if (HAL_ArpGetMacAddress(dest_if, nexthop, dest_mac) == 0) {
-            // found
-            memcpy(output, packet, res);
-            // update ttl and checksum
-            forward(output, res);
-            // TODO: you might want to check ttl=0 case
-            if(output[8] == 0x00){
-              output[0] = 0x0b;
-              output[1] = 0x00;
+      // } else {
+      //   // forward
+      //   // beware of endianness
+      //   uint32_t nexthop, dest_if, b3_metric;
+      //   if (query(src_addr, &nexthop, &dest_if, &b3_metric)) {
+      //     // found
+      //     macaddr_t dest_mac;
+      //     // direct routing
+      //     if (nexthop == 0) {
+      //       nexthop = dst_addr;
+      //     }
+      //     if (HAL_ArpGetMacAddress(dest_if, nexthop, dest_mac) == 0) {
+      //       // found
+      //       memcpy(output, packet, res);
+      //       // update ttl and checksum
+      //       forward(output, res);
+      //       // TODO: you might want to check ttl=0 case
+      //       if(output[8] == 0x00){
+      //         output[0] = 0x0b;
+      //         output[1] = 0x00;
 
-              // ICMP checksum
-              output16[1] = 0x0000;
+      //         // ICMP checksum
+      //         output16[1] = 0x0000;
 
-              outputAddr[1] = 0x00000000;
+      //         outputAddr[1] = 0x00000000;
 
-              // assign IP's head with 64bit data
-              for (int i=0; i<28; i++) {
-                output[i+8] = packet[i];
-              }
+      //         // assign IP's head with 64bit data
+      //         for (int i=0; i<28; i++) {
+      //           output[i+8] = packet[i];
+      //         }
 
-              unsigned short sum = getChecksum(output, 36);
-              output16[1] = sum;
-              HAL_SendIPPacket(if_index, output, 36, dest_mac);
-            }
-            HAL_SendIPPacket(dest_if, output, res, dest_mac);
-          } else {
-            // not found
-            printf("mac address unfound for dst_if:\t%u nexthop:\t%u dst_mac:\t%u\n", src_addr,nexthop,dest_if);
-          }
-        } else {
-          // not found
-        }
+      //         unsigned short sum = getChecksum(output, 36);
+      //         output16[1] = sum;
+      //         HAL_SendIPPacket(if_index, output, 36, dest_mac);
+      //       }
+      //       HAL_SendIPPacket(dest_if, output, res, dest_mac);
+      //     } else {
+      //       // not found
+      //       printf("mac address unfound for dst_if:\t%u nexthop:\t%u dst_mac:\t%u\n", src_addr,nexthop,dest_if);
+      //     }
+      //   } else {
+      //     // not found
+      //   }
       }
     }
   }
