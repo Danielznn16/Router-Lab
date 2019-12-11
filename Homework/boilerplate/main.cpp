@@ -86,7 +86,7 @@ uint16_t getChecksum(uint8_t *packet,int leng) {
   return re;
 }
 std::vector<RoutingTableEntry>* table;
-void updateRipPacket(RipPacket* ripPack, int if_index){
+void updateRipPacket(RipPacket* ripPack){
   table = getRoutingTableEntry();
   ripPack->numEntries = table->size();
   ripPack->command = 2;
