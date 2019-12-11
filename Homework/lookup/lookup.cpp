@@ -88,7 +88,8 @@ bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metri
 				maxlen = (int)routString.length();
 				*nexthop = routs.at(i).nexthop;
 				*if_index = routs.at(i).if_index;
-				*metric = routs.at(i).metric;
+				if(metric != NULL)
+					*metric = routs.at(i).metric;
 			}
 		}
 	  return (maxlen!=-1);
