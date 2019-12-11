@@ -21,7 +21,7 @@ void printRoutingTableEntry(RoutingTableEntry tmp){
     ((tmp.addr & 0xff000000) >> 24) << "." << 
     ((tmp.addr & 0x00ff0000) >> 16) << "." << 
     ((tmp.addr & 0x0000ff00) >> 8) << "." << 
-    (tmp.addr & 0x000000ff) << "." << 
+    (tmp.addr & 0x000000ff) << 
     "\tnexthop:" << 
     tmp.nexthop << "\tlen:" << 
     tmp.len << "\tmetric:" << 
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
             etr.len = reverseLen(convertEndian(rip.entries[i].mask));
             etr.metric = rip.entries[i].metric + 1;
             etr.if_index = if_index;
-            // cout << "debug";
+            cout << "debug";
             // printRoutingTableEntry(etr);
             if(rip.entries[i].metric + 1 > 16){
               //delete route
