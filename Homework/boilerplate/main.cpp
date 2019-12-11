@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
   uint64_t last_time = 0;
   while (1) {
     uint64_t time = HAL_GetTicks();
-    if (time > last_time + 30 * 1000) {
+    if (time > last_time + 5 * 1000) {
       // cnt time and send rip routing table periodically
       printf("Timer\n");
       for(int i=0; i<N_IFACE_ON_BOARD; i++) {
