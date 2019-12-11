@@ -291,7 +291,71 @@ int main(int argc, char *argv[]) {
         }
       // } else {÷
       }
-    }
+    } else {
+        // forward
+        // beware of endianness
+        uint32_t nexthop, dest_if;
+        if (query(src_addr, &nexthop, &dest_if))
+        {
+          // found
+          macaddr_t dest_mac;
+          // direct routing
+          if (nexthop == 0)
+          {
+            nexthop = dst_addr;
+          }
+          if (HAL_ArpGetMacAddress(dest_if, nexthop, dest_mac) == 0)
+          {
+            // found
+            memcpy(output, packet, res);
+            // update ttl and checksum
+            forward(output, res);
+            // TODO: you might want to check ttl=0 case
+            if (output[8] == 0x00)
+            {
+              // ICMP type
+              output[0] = 0x0b;
+              // ICMP code
+              output[1] = 0x00;
+
+              setupICMPPacket(output, packet);
+
+              // calculate checksum
+              unsigned short answer = getCheckSum(output, 36);
+              output[2] = answer >> 8;
+              output[3] = answer;
+              HAL_SendIPPacket(if_index, output, 36, src_mac); // 36 is the length of a ICMP packet: 8(head of icmp) + 28(ip head + first 8 bytes of ip data)
+              printf("IP TTL timeout for %x\n", src_addr);
+            }
+            else
+            {
+              HAL_SendIPPacket(dest_if, output, res, dest_mac);
+            }
+          }
+          else
+          {
+            // not found
+          }
+        }
+        else
+        {
+          // not found
+          output[0] = 0x03;
+          // ICMP code
+          output[1] = 0x00;
+
+          setupICMPPacket(output, packet);
+
+          // calculate checksum
+          output[2] = 0x00;
+          output[3] = 0x00;
+          unsigned short answer = getCheckSum(output, 36);
+          output[2] = answer >> 8;
+          output[3] = answer;
+          HAL_SendIPPacket(if_index, output, 36, src_mac); // 36 is the length of a ICMP packet: 8(head of icmp) + 28(ip head + first 8 bytes of ip data)
+          printf("IP not found for %x\n", src_addr);
+        }
+      }
   }
   return 0;
 }
