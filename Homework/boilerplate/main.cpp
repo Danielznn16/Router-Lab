@@ -16,7 +16,14 @@ extern bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output);
 extern uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t dst_addr);
 extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
-
+void printRoutingTableEntry(RoutingTableEntry tmp){
+  cout << "addr:" << 
+    tmp.addr << "\tnexthop:" << 
+    tmp.nexthop << "\tlen:" << 
+    tmp.len "\tmetric:" << 
+    tmp.metric << "\tif_Index:" << 
+    tmp.if_index << endl;
+}
 uint8_t packet[2048];
 uint8_t output[2048];
 uint16_t* output16 = (uint16_t*)output;
@@ -216,11 +223,17 @@ int main(int argc, char *argv[]) {
             } else {
               uint32_t search_if_index,search_nexthop,search_metric;
               if(query(etr.addr, &search_nexthop, &search_if_index, &search_metric)){
-                if(etr.metric <= search_metric)
+                if(etr.metric <= search_metric){
                   update(true,etr);
+                }
               }else{
                 update(true,etr);
               }
+
+              //print rout
+              cout << "updated";
+              printRoutingTableEntry(etr);
+
             }
           }
 
