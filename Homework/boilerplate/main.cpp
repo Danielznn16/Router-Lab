@@ -91,7 +91,7 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       // Flags
       output16[3] = 0x0000;
       // TTL & protocol
-      output16[4] = 0x0111;
+      output16[4] = 0x1101;
       //checksum
       output16[5] = 0x0000;
       output16[13] = 0x0000;
@@ -103,10 +103,10 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
       output[2] = (rip_len+28)>>8;
       output[3] = (rip_len+28);
-      cout << "rip_len\t" << rip_len + 28 << endl;
+      // cout << "rip_len\t" << rip_len + 28 << endl;
       output[24] = (rip_len+8)>>8;
       output[25] = (rip_len+8);
-      cout << "rip_len-2\t" << rip_len + 8 << endl;
+      // cout << "rip_len-2\t" << rip_len + 8 << endl;
 
       output16[5] = getChecksum(output, 20);
       return rip_len;
