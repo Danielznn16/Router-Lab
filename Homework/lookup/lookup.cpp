@@ -36,25 +36,25 @@ vector<RoutingTableEntry>* getRoutingTableEntry(){
 void update(bool insert, RoutingTableEntry entry) {
 	if(insert){
 	    int flag = false;
-	    for (int i = 0; i < RouterTable.size(); i++)
+	    for (int i = 0; i < routs.size(); i++)
 	    {
-	      if (RouterTable.at(i).addr == entry.addr && RouterTable.at(i).len == entry.len)
+	      if (routs.at(i).addr == entry.addr && routs.at(i).len == entry.len)
 	      {
-	        RouterTable.at(i).nexthop = entry.nexthop;
-	        RouterTable.at(i).if_index = entry.if_index;
+	        routs.at(i).nexthop = entry.nexthop;
+	        routs.at(i).if_index = entry.if_index;
 	        flag = true;
 	        break;
 	      }
 	    }
 	    if(!flag)
 	    {
-	      RouterTable.push_back(entry);
+	      routs.push_back(entry);
 	    }
   }else{
-		for (int i = 0; i < RouterTable.size(); i++){
-	      if (RouterTable.at(i).addr == entry.addr && RouterTable.at(i).len == entry.len && RouterTable.at(i).if_index == entry.if_index)
+		for (int i = 0; i < routs.size(); i++){
+	      if (routs.at(i).addr == entry.addr && routs.at(i).len == entry.len && routs.at(i).if_index == entry.if_index)
 	      {
-	        RouterTable.erase(RouterTable.begin() + i);
+	        routs.erase(routs.begin() + i);
 	        break;
 	      }
 	    }
