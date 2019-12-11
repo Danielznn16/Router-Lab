@@ -73,8 +73,8 @@ void updateRipPacket(RipPacket* ripPack){
   ripPack->command = 2;
   for(int i = 0; i < ripPack->numEntries; i++){
     RipEntry ripE;
-    ripE.addr = table.at(i).addr;
     ripE.mask = __builtin_bswap32 (convertEndian(len2(table.at(i).len)));
+    ripE.addr = table.at(i).addr & ripE.mask;
     ripE.metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
     ripE.nexthop = table.at(i).nexthop;
     ripPack->entries[i] = ripE;
