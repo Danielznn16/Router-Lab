@@ -1,7 +1,8 @@
 #include "rip.h"
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <iostream>
+using namespace std;
 /*
   在头文件 rip.h 中定义了如下的结构体：
   #define RIP_MAX_ENTRY 25
