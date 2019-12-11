@@ -367,7 +367,7 @@ int main(int argc, char *argv[]) {
           output[2] = answer >> 8;
           output[3] = answer;
           HAL_SendIPPacket(if_index, output, 36, src_mac); // 36 is the length of a ICMP packet: 8(head of icmp) + 28(ip head + first 8 bytes of ip data)
-          printf("IP not found for %x\n", src_addr);
+          printf("IP not found for %x\n", dst_addr);
       }
     }
   }
