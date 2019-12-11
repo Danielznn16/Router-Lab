@@ -129,7 +129,8 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       output[25] = (rip_len+8);
       // cout << "rip_len-2\t" << rip_len + 8 << endl;
 
-      output16[5] = getChecksum(output, 20);
+      output[10] = getChecksum(output, 20)>>8;
+      output[11] = getChecksum(output, 20);
       return rip_len;
 }
 
@@ -138,7 +139,6 @@ int main(int argc, char *argv[]) {
   if (res < 0) {
     return res;
   }
-  
   // Add direct routes
   // For example:
   // 10.0.0.0/24 if 0
