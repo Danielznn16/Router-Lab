@@ -97,8 +97,8 @@ void updateRipPacket(RipPacket* ripPack){
     ripPack->entries[i].mask = __builtin_bswap32(convertEndian(len2(table->at(i).len)));
     ripPack->entries[i].addr = table->at(i).addr & ripPack->entries[i].mask;
     ripPack->entries[i].metric = __builtin_bswap32(uint32_t(table->at(i).metric));
-    // ripPack->entries[i].nexthop = table->at(i).nexthop;
-    ripPack->entries[i].nexthop = 0;
+    ripPack->entries[i].nexthop = table->at(i).nexthop;
+    // ripPack->entries[i].nexthop = 0;
     }
 }
 
