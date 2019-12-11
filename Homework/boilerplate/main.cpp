@@ -183,8 +183,8 @@ int main(int argc, char *argv[]) {
     // big endian
     memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
     memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
-    src_addr = __builtin_bswap32(src_addr);
-    dst_addr = __builtin_bswap32(dst_addr);
+    // src_addr = __builtin_bswap32(src_addr);
+    // dst_addr = __builtin_bswap32(dst_addr);
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
       if (memcmp(&dst_addr, &addrs[i], sizeof(in_addr_t)) == 0) {
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     if (dst_is_me) {
       // TODO: RIP?
       RipPacket rip;
-        cout << "reached is me\n";
+      cout << "reached is me\n";  
       if (disassemble(packet, res, &rip)) {
         cout << "reached1\n";
         if (rip.command == 1) {
