@@ -35,7 +35,7 @@ uint32_t* outputAddr = (uint32_t*)output;
 // 你可以按需进行修改，注意端序
 // in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
 in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0203a8c0, 0x0104a8c0, 0x0102000a, 0x0103000a};
-in_addr_t multicast_address = 0x090000e0;
+in_addr_t multicast_address = 0xe0000009;
 macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicasting mac address 01:00:5e:00:00:09
 
 uint32_t len2(uint32_t len){
@@ -183,8 +183,8 @@ int main(int argc, char *argv[]) {
     // big endian
     memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
     memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
-    // src_addr = __builtin_bswap32(src_addr);
-    // dst_addr = __builtin_bswap32(dst_addr);
+    src_addr = convertEndian(src_addr);
+    dst_addr = convertEndian(dst_addr);
     cout << "dst_addr " << dst_addr << endl;
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
