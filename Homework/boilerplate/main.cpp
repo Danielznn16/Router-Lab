@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
           for(int j = 0; j < rip.numEntries; j++){
             RoutingTableEntry etr;
             etr.addr = rip.entries[j].addr;
-            etr.nexthop = rip.entries[j].nexthop;
+            etr.nexthop = src_addr;
             etr.len = reverseLen(convertEndian(rip.entries[j].mask));
             etr.metric = convertEndian(rip.entries[j].metric) + 1;
             etr.if_index = if_index;
