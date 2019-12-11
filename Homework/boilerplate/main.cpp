@@ -33,11 +33,9 @@ macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicas
 
 uint32_t len2(uint32_t len){
   uint32_t re = 0;
-  for(int i = 0; i < 31;i++){
-    re = (re+((i > len-1)?1:0)) << 1;
+  for(int i = 0; i < len;i++){
+    re = (re << 1)+1;
   }
-  if(len == 32)
-    re ++;
   return re;
 }
 

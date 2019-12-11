@@ -130,6 +130,7 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t ds
     buffer[i*20+21] = rip->entries[i].metric>>8;
     buffer[i*20+22] = rip->entries[i].metric>>16;
     buffer[i*20+23] = rip->entries[i].metric>>24;
+    cout << "metric" << rip->entries[i].metric << endl;
   }
   return  (rip->numEntries)*20+4;
 }
