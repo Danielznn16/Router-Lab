@@ -213,6 +213,7 @@ int main(int argc, char *argv[]) {
       dst_is_me = true;
     }
     // TODO: Handle rip multicast address?
+    if(false)
     if (dst_is_me) {
       // TODO: RIP?
       cout << "reached is me\n";  
