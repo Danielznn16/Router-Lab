@@ -48,8 +48,9 @@ void update(bool insert, RoutingTableEntry entry) {
 			routs.at(index).if_index = entry.if_index;
 			routs.at(index).metric = entry.metric;
 		}
-	}else{	
-		routs.erase(index+routs.begin());
+	}else{
+		if(index != -1)
+			routs.erase(index+routs.begin());
 	}
 }
 
