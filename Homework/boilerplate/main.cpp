@@ -237,12 +237,12 @@ int main(int argc, char *argv[]) {
             etr.len = reverseLen(convertEndian(rip.entries[j].mask));
             etr.metric = convertEndian(rip.entries[j].metric) + 1;
             etr.if_index = if_index;
-            cout << "debug";
-            printRoutingTableEntry(etr);
             if(etr.metric > 16){
               //delete route
               update(false,etr);
               failers.push_back(etr);
+              cout << "delete\t";
+              printRoutingTableEntry(etr);
             } else {
               uint32_t search_if_index,search_nexthop,search_metric;
               if(query(etr.addr, &search_nexthop, &search_if_index, &search_metric)){
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
               }
 
               //print rout
-              cout << "updated";
+              cout << "updated\t";
               printRoutingTableEntry(etr);
 
             }
