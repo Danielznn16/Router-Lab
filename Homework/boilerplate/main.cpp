@@ -16,6 +16,14 @@ extern bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output);
 extern uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t dst_addr);
 extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
+
+
+static RipPacket resp;
+static RipPacket ripPack;
+static RipPacket rip;
+static RipPacket fails;
+static RipPacket routs;
+
 void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
     ((tmp.addr & 0xff000000) >> 24) << "." << 
@@ -153,7 +161,6 @@ int main(int argc, char *argv[]) {
       // cnt time and send rip routing table periodically
       printf("Timer\n");
       for(int i=0; i<N_IFACE_ON_BOARD; i++) {
-        static RipPacket ripPack;
         updateRipPacket(&ripPack);
         HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, false) + 20 + 8, multicast_mac_addr);
       }
@@ -208,13 +215,11 @@ int main(int argc, char *argv[]) {
     // TODO: Handle rip multicast address?
     if (dst_is_me) {
       // TODO: RIP?
-      static RipPacket rip;
       cout << "reached is me\n";  
       if (disassemble(packet, res, &rip)) {
         // cout << "reached1\n";
         if (rip.command == 1) {
           // request
-          static RipPacket resp;
           updateRipPacket(&resp);
           // ...
           // RIP
@@ -256,7 +261,6 @@ int main(int argc, char *argv[]) {
           }
 
           //fails
-          static RipPacket fails;
           fails.numEntries = failers.size();
           for(int i = 0; i < failers.size();i++){
             RipEntry etr;
@@ -278,7 +282,6 @@ int main(int argc, char *argv[]) {
             }
 
           //routing table
-          static RipPacket routs;
           updateRipPacket(&routs);
 
           //send Routing
