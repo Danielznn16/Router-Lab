@@ -22,8 +22,8 @@
 */
 using namespace std;
 vector<RoutingTableEntry> routs;
-vector<RoutingTableEntry> getRoutingTableEntry(){
-	return routs;
+vector<RoutingTableEntry>* getRoutingTableEntry(){
+	return &routs;
 }
 /**
  * @brief 插入/删除一条路由表表项
