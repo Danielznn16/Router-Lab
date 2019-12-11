@@ -85,17 +85,17 @@ uint16_t getChecksum(uint8_t *packet,int leng) {
   unsigned short re = ~check;
   return re;
 }
-  std::vector<RoutingTableEntry> table;
+  std::vector<RoutingTableEntry>* table;
 void updateRipPacket(RipPacket* ripPack){
-  &table = getRoutingTableEntry();
-  ripPack->numEntries = table.size();
+  table = getRoutingTableEntry();
+  ripPack->numEntries = table->size();
   ripPack->command = 2;
   for(int i = 0; i < ripPack->numEntries; i++){
     // RipEntry ripE;
-    ripPack->entries[i].mask = __builtin_bswap32 (convertEndian(len2(table.at(i).len)));
-    ripPack->entries[i].addr = table.at(i).addr & ripPack->entries[i].mask;
-    ripPack->entries[i].metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
-    ripPack->entries[i].nexthop = table.at(i).nexthop;
+    ripPack->entries[i].mask = __builtin_bswap32 (convertEndian(len2(table->at(i).len)));
+    ripPack->entries[i].addr = table->at(i).addr & ripPack->entries[i].mask;
+    ripPack->entries[i].metric = __builtin_bswap32 (uint32_t(table->at(i).metric));
+    ripPack->entries[i].nexthop = table->at(i).nexthop;
     }
 }
 
