@@ -86,7 +86,7 @@ uint16_t getChecksum(uint8_t *packet,int leng) {
   return re;
 }
 std::vector<RoutingTableEntry>* table;
-void updateRipPacket(RipPacket* ripPack){
+void updateRipPacket(RipPacket* ripPack, int if_index){
   table = getRoutingTableEntry();
   ripPack->numEntries = table->size();
   ripPack->command = 2;
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
           for(int j = 0; j < rip.numEntries; j++){
             RoutingTableEntry etr;
             etr.addr = rip.entries[j].addr;
-            etr.nexthop = dst_addr;
+            etr.nexthop = addrs[if_index];
             etr.len = reverseLen(convertEndian(rip.entries[j].mask));
             etr.metric = convertEndian(rip.entries[j].metric) + 1;
             etr.if_index = if_index;
