@@ -78,12 +78,12 @@ void update(bool insert, RoutingTableEntry entry) {
 uint32_t placeholder_metric;
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric = &placeholder_metric) {
 		// cout << "addrString: " << addrString << endl;
-		uint32_t maxlen = -1;
+		int maxlen = -1;
 		for(int i = 0; i < routs.size(); i++){
 			cout << "routMask: " << len2_2(routs.at(i).len)<< endl;
 			uint32_t dst_addr = addr &len2_2(routs.at(i).len);
             uint32_t dst_addr2 = routs.at(i).addr &len2_2(routs.at(i).len);
-			if(dst_addr == dst_addr2 && maxlen < routs.at(i).len){
+			if(dst_addr == dst_addr2 && maxlen < ((int)(routs.at(i).len))){
 				maxlen = routs.at(i).len;
 				*nexthop = routs.at(i).nexthop;
 				*if_index = routs.at(i).if_index;
