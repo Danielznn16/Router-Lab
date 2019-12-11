@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
           // response
           // TODO: use query and updatec
           std::vector<RoutingTableEntry> failers;
-          // cout << "response reached with rip length" << rip.numEntries << endl;
+          cout << "response reached with rip length" << rip.numEntries << endl;
           for(int i = 0; i < rip.numEntries; i++){
             RoutingTableEntry etr;
             etr.addr = rip.entries[i].addr;
