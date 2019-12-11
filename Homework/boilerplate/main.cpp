@@ -235,7 +235,7 @@ int main(int argc, char *argv[]) {
             etr.addr = rip.entries[j].addr;
             etr.nexthop = rip.entries[j].nexthop;
             etr.len = reverseLen(convertEndian(rip.entries[j].mask));
-            etr.metric = rip.entries[j].metric + 1;
+            etr.metric = convertEndian(rip.entries[j].metric) + 1;
             etr.if_index = if_index;
             cout << "debug";
             printRoutingTableEntry(etr);
