@@ -99,7 +99,7 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       output16[10] = 0x0802;
       output16[11] = 0x0802;
       outputAddr[4] = multicast_address;
-      outputAddr[3] = dst_addr;
+      outputAddr[3] = src_addr;
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
       output[2] = (rip_len+28)>>8;
       output[3] = (rip_len+28);
