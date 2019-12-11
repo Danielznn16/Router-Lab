@@ -63,7 +63,7 @@ uint32_t reverseLen(uint32_t len){
   cout << len << "\t";
   while(len > 0){
     re++;
-    len = len>>1;
+    len = len<<1;
   }
   cout << re << endl;
   return re;
