@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
               if(i!= if_index){
                 sendIPPacket(&fails, addrs[i], multicast_address, true);
                 uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
-                HAL_SendIPPacket(i, output, rip_len+28, src_mac);
+                HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
               }
             }
 
@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
           for(int i = 0; i < N_IFACE_ON_BOARD; i++){
             sendIPPacket(&routs, addrs[i], multicast_address, true);
             uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
-            HAL_SendIPPacket(i, output, rip_len+28, src_mac);
+            HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
           }
         }
       // } else {÷
