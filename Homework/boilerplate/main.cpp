@@ -101,10 +101,12 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       output16[11] = 0x0208;
       outputAddr[4] = multicast_address;
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
-      output16[1] = rip_len+28;
-      cout << "rip_len" << rip_len + 28 << endl;
-      output16[12] = rip_len+8;
-      cout << "rip_len-2" << rip_len + 8 << endl;
+      output[2] = (rip_len+28)>>8;
+      output[3] = (rip_len+28);
+      cout << "rip_len\t" << rip_len + 28 << endl;
+      output[24] = (rip_len+8)>>8;
+      output[25] = (rip_len+8);
+      cout << "rip_len-2\t" << rip_len + 8 << endl;
 
       output16[5] = getChecksum(output, 20);
       return rip_len;
