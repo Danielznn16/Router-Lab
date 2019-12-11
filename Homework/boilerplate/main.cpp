@@ -261,77 +261,35 @@ int main(int argc, char *argv[]) {
           }
 
           //fails
-          fails.numEntries = failers.size();
-          for(int i = 0; i < failers.size();i++){
-            fails.entries[i].addr = failers[i].addr;
-            fails.entries[i].nexthop = failers[i].nexthop;
-            fails.entries[i].mask = convertEndian(len2(failers[i].len));
-            fails.entries[i].metric = convertEndian((uint32_t)1);
-          }
+          // fails.numEntries = failers.size();
+          // for(int i = 0; i < failers.size();i++){
+          //   fails.entries[i].addr = failers[i].addr;
+          //   fails.entries[i].nexthop = failers[i].nexthop;
+          //   fails.entries[i].mask = convertEndian(len2(failers[i].len));
+          //   fails.entries[i].metric = convertEndian((uint32_t)1);
+          // }
 
-          // //send failures
-          if(!failers.empty())
-            for(int i = 0; i < N_IFACE_ON_BOARD; i++){
-              if(i!= if_index){
-                sendIPPacket(&fails, addrs[i], multicast_address, true);
-                uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
-                HAL_SendIPPacket(i, output, rip_len+28, src_mac);
-              }
-            }
+          // // //send failures
+          // if(!failers.empty())
+          //   for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+          //     if(i!= if_index){
+          //       sendIPPacket(&fails, addrs[i], multicast_address, true);
+          //       uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
+          //       HAL_SendIPPacket(i, output, rip_len+28, src_mac);
+          //     }
+          //   }
 
-          //routing table
-          updateRipPacket(&routs);
+          // //routing table
+          // updateRipPacket(&routs);
 
-          //send Routing
-          for(int i = 0; i < N_IFACE_ON_BOARD; i++){
-            sendIPPacket(&routs, addrs[i], multicast_address, true);
-            uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
-            HAL_SendIPPacket(i, output, rip_len+28, src_mac);
-          }
+          // //send Routing
+          // for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+          //   sendIPPacket(&routs, addrs[i], multicast_address, true);
+          //   uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
+          //   HAL_SendIPPacket(i, output, rip_len+28, src_mac);
+          // }
         }
-      // } else {
-      //   // forward
-      //   // beware of endianness
-      //   uint32_t nexthop, dest_if, b3_metric;
-      //   if (query(src_addr, &nexthop, &dest_if, &b3_metric)) {
-      //     // found
-      //     macaddr_t dest_mac;
-      //     // direct routing
-      //     if (nexthop == 0) {
-      //       nexthop = dst_addr;
-      //     }
-      //     if (HAL_ArpGetMacAddress(dest_if, nexthop, dest_mac) == 0) {
-      //       // found
-      //       memcpy(output, packet, res);
-      //       // update ttl and checksum
-      //       forward(output, res);
-      //       // TODO: you might want to check ttl=0 case
-      //       if(output[8] == 0x00){
-      //         output[0] = 0x0b;
-      //         output[1] = 0x00;
-
-      //         // ICMP checksum
-      //         output16[1] = 0x0000;
-
-      //         outputAddr[1] = 0x00000000;
-
-      //         // assign IP's head with 64bit data
-      //         for (int i=0; i<28; i++) {
-      //           output[i+8] = packet[i];
-      //         }
-
-      //         unsigned short sum = getChecksum(output, 36);
-      //         output16[1] = sum;
-      //         HAL_SendIPPacket(if_index, output, 36, dest_mac);
-      //       }
-      //       HAL_SendIPPacket(dest_if, output, res, dest_mac);
-      //     } else {
-      //       // not found
-      //       printf("mac address unfound for dst_if:\t%u nexthop:\t%u dst_mac:\t%u\n", src_addr,nexthop,dest_if);
-      //     }
-      //   } else {
-      //     // not found
-      //   }
+      // } else {÷
       }
     }
   }
