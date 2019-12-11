@@ -188,8 +188,12 @@ int main(int argc, char *argv[]) {
     memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
     memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
     // src_addr = convertEndian(src_addr);
-    // dst_addr = convertEndian(dst_addr);
-    // cout << "dst_addr " << dst_addr << endl;
+    // dst_addr = convertEndian(dst_addr);  cout << "addr:" << 
+    cout << 
+    (dst_addr & 0xff000000) << "." << 
+    (dst_addr & 0x00ff0000) << "." << 
+    (dst_addr & 0x0000ff00) << "." << 
+    (dst_addr & 0x000000ff) << "." << endl;
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
       if (memcmp(&dst_addr, &addrs[i], sizeof(in_addr_t)) == 0) {
