@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
     memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
     memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
     // src_addr = convertEndian(src_addr);
-    // dst_addr = convertEndian(dst_addr);  cout << "addr:" << 
+    // dst_addr = convertEndian(dst_addr);
     cout << "\n" << 
     ((dst_addr & 0xff000000) >> 24) << "." << 
     ((dst_addr & 0x00ff0000) >> 16) << "." << 
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
     if (dst_is_me) {
       // TODO: RIP?
       RipPacket rip;
-      // cout << "reached is me\n";  
+      cout << "reached is me\n";  
       if (disassemble(packet, res, &rip)) {
         // cout << "reached1\n";
         if (rip.command == 1) {
