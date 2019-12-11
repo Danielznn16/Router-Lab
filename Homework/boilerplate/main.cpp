@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
               HAL_SendIPPacket(if_index, output, 36, src_mac); // 36 is the length of a ICMP packet: 8(head of icmp) + 28(ip head + first 8 bytes of ip data)
               printf("IP TTL timeout for %x\n", src_addr);
             }else{
-          HAL_SendIPPacket(dest_if, output, res, dest_mac);
+            HAL_SendIPPacket(dest_if, output, res, dest_mac);
           }
         } else {
           // not found

@@ -25,6 +25,13 @@ vector<RoutingTableEntry> routs;
 vector<RoutingTableEntry>* getRoutingTableEntry(){
 	return &routs;
 }
+uint32_t len2_2(uint32_t len){
+  uint32_t re = 0;
+  for(int i = 0; i < len;i++){
+    re = (re << 1)+1;
+  }
+  return re;
+}
 /**
  * @brief 插入/删除一条路由表表项
  * @param insert 如果要插入则为 true ，要删除则为 false
@@ -70,21 +77,11 @@ void update(bool insert, RoutingTableEntry entry) {
  */
 uint32_t placeholder_metric;
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric = &placeholder_metric) {
-		string addrString;
-		{
-			stringstream ss;
-			ss << hex << (int)addr;
-			addrString = ss.str();
-		}
 		// cout << "addrString: " << addrString << endl;
 		int maxlen = -1;
 		for(int i = 0; i < routs.size(); i++){
-			string routString;
-			stringstream ss;
-			ss << hex << (int)(routs.at(i).addr);
-			routString = ss.str();
 			// cout << "routString: " << routString <<"|"<<(addrString.find(routString)!=-1)<<"|"<<(maxlen < routString.length())<<"|"<<maxlen<<"|"<<routString.length()<< endl;
-			if(((addrString.find(routString))!=-1) && (maxlen < (int)routString.length())){
+			if((addr&len2_2(routs.at(i).len)) == (routs.at(i).addr & len2_2(routs.at(i).len))&& maxlen < routs.at(i).len){
 				maxlen = (int)routString.length();
 				*nexthop = routs.at(i).nexthop;
 				*if_index = routs.at(i).if_index;
