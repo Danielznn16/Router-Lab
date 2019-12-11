@@ -18,9 +18,9 @@ extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
 void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
-    (tmp.addr & 0xff000000) << "." << 
-    (tmp.addr & 0x00ff0000) << "." << 
-    (tmp.addr & 0x0000ff00) << "." << 
+    ((tmp.addr & 0xff000000) >> 24) << "." << 
+    ((tmp.addr & 0x00ff0000) >> 16) << "." << 
+    ((tmp.addr & 0x0000ff00) >> 8) << "." << 
     (tmp.addr & 0x000000ff) << "." << 
     "\tnexthop:" << 
     tmp.nexthop << "\tlen:" << 
@@ -190,9 +190,9 @@ int main(int argc, char *argv[]) {
     // src_addr = convertEndian(src_addr);
     // dst_addr = convertEndian(dst_addr);  cout << "addr:" << 
     cout << "\n" << 
-    (dst_addr & 0xff000000) << "." << 
-    (dst_addr & 0x00ff0000) << "." << 
-    (dst_addr & 0x0000ff00) << "." << 
+    ((dst_addr & 0xff000000) >> 24) << "." << 
+    ((dst_addr & 0x00ff0000) >> 16) << "." << 
+    ((dst_addr & 0x0000ff00) >> 8) << "." << 
     (dst_addr & 0x000000ff)  << endl;
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
