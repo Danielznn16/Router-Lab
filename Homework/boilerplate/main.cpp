@@ -18,7 +18,11 @@ extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
 void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
-    tmp.addr << "\tnexthop:" << 
+    tmp.addr & 0xff000000 << "." << 
+    tmp.addr & 0x00ff0000 << "." << 
+    tmp.addr & 0x0000ff00 << "." << 
+    tmp.addr & 0x000000ff << "." << 
+    "\tnexthop:" << 
     tmp.nexthop << "\tlen:" << 
     tmp.len << "\tmetric:" << 
     tmp.metric << "\tif_Index:" << 
@@ -201,9 +205,9 @@ int main(int argc, char *argv[]) {
     if (dst_is_me) {
       // TODO: RIP?
       RipPacket rip;
-      cout << "reached is me\n";  
+      // cout << "reached is me\n";  
       if (disassemble(packet, res, &rip)) {
-        cout << "reached1\n";
+        // cout << "reached1\n";
         if (rip.command == 1) {
           // request
           RipPacket resp;
@@ -216,7 +220,7 @@ int main(int argc, char *argv[]) {
           // response
           // TODO: use query and updatec
           std::vector<RoutingTableEntry> failers;
-          cout << "response reached with rip length" << rip.numEntries << endl;
+          // cout << "response reached with rip length" << rip.numEntries << endl;
           for(int i = 0; i < rip.numEntries; i++){
             RoutingTableEntry etr;
             etr.addr = rip.entries[i].addr;
@@ -224,8 +228,8 @@ int main(int argc, char *argv[]) {
             etr.len = reverseLen(convertEndian(rip.entries[i].mask));
             etr.metric = rip.entries[i].metric + 1;
             etr.if_index = if_index;
-            cout << "debug";
-            printRoutingTableEntry(etr);
+            // cout << "debug";
+            // printRoutingTableEntry(etr);
             if(rip.entries[i].metric + 1 > 16){
               //delete route
               update(false,etr);
@@ -241,8 +245,8 @@ int main(int argc, char *argv[]) {
               }
 
               //print rout
-              // cout << "updated";
-              // printRoutingTableEntry(etr);
+              cout << "updated";
+              printRoutingTableEntry(etr);
 
             }
           }
