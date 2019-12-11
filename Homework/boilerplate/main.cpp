@@ -97,8 +97,8 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       output16[13] = 0x0000;
       // UDP
       // port = 520
-      output16[10] = 0x0208;
-      output16[11] = 0x0208;
+      output16[10] = 0x0802;
+      output16[11] = 0x0802;
       outputAddr[4] = multicast_address;
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
       output[2] = (rip_len+28)>>8;
