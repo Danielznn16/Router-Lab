@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
       dst_is_me = true;
     }
     // TODO: Handle rip multicast address?
-    if(false)
+    // if(false)
     if (dst_is_me) {
       // TODO: RIP?
       cout << "reached is me\n";  
@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
               if(i!= if_index){
                 sendIPPacket(&fails, addrs[i], multicast_address, true);
                 uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
-                HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
+                // HAL_SendIPPacket(if_index, output, rip_len+28, src_mac);
               }
             }
 
@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
           for(int i = 0; i < N_IFACE_ON_BOARD; i++){
             sendIPPacket(&routs, addrs[i], multicast_address, true);
             uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
-            HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
+            // HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
           }
         }
       // } else {
