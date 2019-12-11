@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
           output[22] = 0x02;
           output[23] = 0x08;
           uint32_t* outputAddr = (uint32_t*)output;
-          outputAddr[3] = dst_addr;
+          outputAddr[3] = addrs[if_index];
 
           uint16_t* output16 = (uint16_t*)output;
 
@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
             output[23] = 0x08;
             uint32_t* outputAddr = (uint32_t*)output;
             outputAddr[3] = dst_addr;
-
+            if()
             uint16_t* output16 = (uint16_t*)output;
 
             //send failures
