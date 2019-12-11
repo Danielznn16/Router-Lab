@@ -192,6 +192,10 @@ int main(int argc, char *argv[]) {
         break;
       }
     }
+        if (memcmp(&dst_addr, &multicast_addr, sizeof(in_addr_t)) == 0)
+    {
+      dst_is_me = true;
+    }
     // TODO: Handle rip multicast address?
     if (dst_is_me) {
       // TODO: RIP?
