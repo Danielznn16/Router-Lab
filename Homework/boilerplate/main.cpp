@@ -60,10 +60,12 @@ uint32_t len2(uint32_t len){
 
 uint32_t reverseLen(uint32_t len){
   uint32_t re = 0;
+  cout << len << "\t";
   while(len > 0){
     re++;
     len = len>>1;
   }
+  cout << re << endl;
   return re;
 }
 
@@ -92,9 +94,9 @@ void updateRipPacket(RipPacket* ripPack){
   ripPack->command = 2;
   for(int i = 0; i < ripPack->numEntries; i++){
     // RipEntry ripE;
-    ripPack->entries[i].mask = __builtin_bswap32 (convertEndian(len2(table->at(i).len)));
+    ripPack->entries[i].mask = __builtin_bswap32(convertEndian(len2(table->at(i).len)));
     ripPack->entries[i].addr = table->at(i).addr & ripPack->entries[i].mask;
-    ripPack->entries[i].metric = __builtin_bswap32 (uint32_t(table->at(i).metric));
+    ripPack->entries[i].metric = __builtin_bswap32(uint32_t(table->at(i).metric));
     // ripPack->entries[i].nexthop = table->at(i).nexthop;
     ripPack->entries[i].nexthop = 0;
     }
