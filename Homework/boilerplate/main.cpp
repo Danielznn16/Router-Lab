@@ -18,10 +18,10 @@ extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
 void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
-    tmp.addr & 0xff000000 << "." << 
-    tmp.addr & 0x00ff0000 << "." << 
-    tmp.addr & 0x0000ff00 << "." << 
-    tmp.addr & 0x000000ff << "." << 
+    (tmp.addr & 0xff000000) << "." << 
+    (tmp.addr & 0x00ff0000) << "." << 
+    (tmp.addr & 0x0000ff00) << "." << 
+    (tmp.addr & 0x000000ff) << "." << 
     "\tnexthop:" << 
     tmp.nexthop << "\tlen:" << 
     tmp.len << "\tmetric:" << 
