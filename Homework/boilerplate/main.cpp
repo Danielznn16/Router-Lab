@@ -35,7 +35,7 @@ uint32_t* outputAddr = (uint32_t*)output;
 // 你可以按需进行修改，注意端序
 // in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
 in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0203a8c0, 0x0104a8c0, 0x0102000a, 0x0103000a};
-in_addr_t multicast_address = 0xe0000009;
+in_addr_t multicast_address = 0x090000e0;
 macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicasting mac address 01:00:5e:00:00:09
 
 uint32_t len2(uint32_t len){
@@ -50,7 +50,7 @@ uint32_t reverseLen(uint32_t len){
   uint32_t re = 0;
   while(len > 0){
     re++;
-    len = len<<1;
+    len = len>>1;
   }
   return re;
 }
