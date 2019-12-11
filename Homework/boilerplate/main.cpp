@@ -216,6 +216,8 @@ int main(int argc, char *argv[]) {
             etr.len = reverseLen(convertEndian(rip.entries[i].mask));
             etr.metric = rip.entries[i].metric + 1;
             etr.if_index = if_index;
+            cout << "debug";
+            printRoutingTableEntry(etr);
             if(rip.entries[i].metric + 1 > 16){
               //delete route
               update(false,etr);
@@ -231,8 +233,8 @@ int main(int argc, char *argv[]) {
               }
 
               //print rout
-              cout << "updated";
-              printRoutingTableEntry(etr);
+              // cout << "updated";
+              // printRoutingTableEntry(etr);
 
             }
           }
