@@ -193,62 +193,11 @@ int main(int argc, char *argv[]) {
         if (rip.command == 1) {
           // request
           RipPacket resp;
-          std::vector<RoutingTableEntry> routingTableEntry = getRoutingTableEntry();
-          //assign cmd && routingTableEntry's size
-          resp.command = 2;
-          resp.numEntries = routingTableEntry.size();
-          for(int i = 0; i < routingTableEntry.size();i++){
-            RipEntry etr;
-            etr.addr = routingTableEntry[i].addr;
-            etr.nexthop = routingTableEntry[i].nexthop;
-            etr.mask = convertEndian(len2(routingTableEntry[i].len));
-            etr.metric = convertEndian((uint32_t)1);
-            resp.entries[i] = etr;
-          }
-          // TODO: fill resp
-          // assemble
-          // IP
-          output[0] = 0x45;
-          output[1] = 0x00;
-
-          output[4] = 0x00;
-          output[5] = 0x00;
-          output[6] = 0x00;
-          output[7] = 0x00;
-
-          output[8] = 0x01;
-          output[9] = 0x11;
-          // checkSUM
-          //src ip addr
-          output16[5] = 0x0000;
-          outputAddr[4] = src_addr;
-          outputAddr[3] = dst_addr;
-          // ...
-          // UDP
-          // port = 520
-          output[20] = 0x02;
-          output[21] = 0x08;
-
-          output[22] = 0x02;
-          output[23] = 0x08;
-
+          updateRipPacket(&resp);
           // ...
           // RIP
-          uint32_t rip_len = assemble(&resp, &output[20 + 8], false, 0);
-          output16[1] = rip_len + 28;//total length
-          output16[5] = getChecksum(output,20);
-          output16[12] = rip_len + 8;//UDP length
-          output16[13] = 0;
-          {
-            uint32_t tmp2 = src_addr + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-            tmp2 = (tmp2>>16) + (tmp2&0xffff);
-            output16[13] = (unsigned short)(~tmp2);
-          }
-          printf("%ud",src_addr);
-          // checksum calculation for ip and udp
-          // if you don't want to calculate udp checksum, set it to zero
-          // send it back
-          HAL_SendIPPacket(if_index, output, rip_len + 20 + 8, src_mac);
+          uint32_t rip_len = sendIPPacket(&resp, src_addr, dst_addr, true);
+          HAL_SendIPPacket(if_index, output, rip_len + 28, src_mac);
         } else {
           // response
           // TODO: use query and updatec
