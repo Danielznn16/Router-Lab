@@ -38,7 +38,7 @@ void update(bool insert, RoutingTableEntry entry) {
 	    int flag = false;
 	    for (int i = 0; i < routs.size(); i++)
 	    {
-	      if (routs.at(i).addr == entry.addr && routs.at(i).len == entry.len)
+	      if ((routs.at(i).addr == entry.addr && routs.at(i).len == entry.len) && (routs.at(i).metric > entry.metric))
 	      {
 	        routs.at(i).nexthop = entry.nexthop;
 	        routs.at(i).if_index = entry.if_index;
