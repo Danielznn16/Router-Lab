@@ -34,23 +34,30 @@ vector<RoutingTableEntry>* getRoutingTableEntry(){
  * 删除时按照 addr 和 len 匹配。
  */
 void update(bool insert, RoutingTableEntry entry) {
-	int index = -1;
-	for(int i = 0; i < routs.size(); i++)
-		if(routs.at(i).addr==entry.addr && routs.at(i).len==entry.len){
-			index = i;
-			i = routs.size();
-		}
 	if(insert){
-		if(index == -1)
-			routs.push_back(entry);
-		else{
-			routs.at(index).nexthop = entry.nexthop;
-			routs.at(index).if_index = entry.if_index;
-			routs.at(index).metric = entry.metric;
-		}
-	}else{
-		if(index != -1)
-			routs.erase(index+routs.begin());
+	    int flag = false;
+	    for (int i = 0; i < RouterTable.size(); i++)
+	    {
+	      if (RouterTable.at(i).addr == entry.addr && RouterTable.at(i).len == entry.len)
+	      {
+	        RouterTable.at(i).nexthop = entry.nexthop;
+	        RouterTable.at(i).if_index = entry.if_index;
+	        flag = true;
+	        break;
+	      }
+	    }
+	    if(!flag)
+	    {
+	      RouterTable.push_back(entry);
+	    }
+  }else{
+		for (int i = 0; i < RouterTable.size(); i++){
+	      if (RouterTable.at(i).addr == entry.addr && RouterTable.at(i).len == entry.len && RouterTable.at(i).if_index == entry.if_index)
+	      {
+	        RouterTable.erase(RouterTable.begin() + i);
+	        break;
+	      }
+	    }
 	}
 }
 
