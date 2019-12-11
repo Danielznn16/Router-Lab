@@ -54,7 +54,7 @@ uint32_t reverseLen(uint32_t len){
   uint32_t re = 0;
   while(len > 0){
     re++;
-    // len = len>>1;
+    len = len>>1;
   }
   return re;
 }
