@@ -109,7 +109,7 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       // port = 520
       output16[10] = 0x0802;
       output16[11] = 0x0802;
-      outputAddr[4] = multicast_address;
+      outputAddr[4] = dst_addr;
       outputAddr[3] = src_addr;
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
       output[2] = (rip_len+28)>>8;
@@ -267,102 +267,25 @@ int main(int argc, char *argv[]) {
             fails.entries[i] = etr;
           }
 
-          //routing table
-          RipPacket routs;
-          std::vector<RoutingTableEntry> routingTableEntry = getRoutingTableEntry();
-          routs.numEntries = routingTableEntry.size();
-          for(int i = 0; i < routingTableEntry.size();i++){
-            RipEntry etr;
-            etr.addr = routingTableEntry[i].addr;
-            etr.nexthop = routingTableEntry[i].nexthop;
-            etr.mask = convertEndian(len2(routingTableEntry[i].len));
-            etr.metric = convertEndian((uint32_t)1);
-            routs.entries[i] = etr;
-          }
-
-          //assign
-
-
-          output[0] = 0x45;
-          output[1] = 0x00;
-
-          output[4] = 0x00;
-          output[5] = 0x00;
-          output[6] = 0x00;
-          output[7] = 0x00;
-
-          output[8] = 0x01;
-          output[9] = 0x11;
-          output[20] = 0x02;
-          output[21] = 0x08;
-
-          output[22] = 0x02;
-          output[23] = 0x08;
-          uint32_t* outputAddr = (uint32_t*)output;
-          outputAddr[3] = addrs[if_index];
-
-          uint16_t* output16 = (uint16_t*)output;
-
-          //send failures
+          // //send failures
           if(!failers.empty())
             for(int i = 0; i < N_IFACE_ON_BOARD; i++){
               if(i!= if_index){
-                outputAddr[4] = addrs[i];
-                output16[5] = 0x0000;
-                uint32_t rip_len = assemble(&fails, &output[20 + 8], false, 0);
-                output16[1] = rip_len + 28;//total length
-                output16[5] = getChecksum(output,20);
-                output16[12] = rip_len + 8;//UDP length
-                output16[13] = 0;
-                {
-                  uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-                  tmp2 = (tmp2>>16) + (tmp2&0xffff);
-                  output16[13] = (unsigned short)(~tmp2);
-                }
+                sendIPPacket(&fails, addrs[i], multicast_address, true);
+                uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
                 HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
               }
             }
 
+          //routing table
+          RipPacket routs;
+          updateRipPacket(&routs);
+
           //send Routing
-
-          {
-            output[0] = 0x45;
-            output[1] = 0x00;
-
-            output[4] = 0x00;
-            output[5] = 0x00;
-            output[6] = 0x00;
-            output[7] = 0x00;
-
-            output[8] = 0x01;
-            output[9] = 0x11;
-            output[20] = 0x02;
-            output[21] = 0x08;
-
-            output[22] = 0x02;
-            output[23] = 0x08;
-            uint32_t* outputAddr = (uint32_t*)output;
-            outputAddr[3] = dst_addr;
-            if()
-            uint16_t* output16 = (uint16_t*)output;
-
-            //send failures
-            for(int i = 0; i < N_IFACE_ON_BOARD; i++){
-              outputAddr[4] = addrs[i];
-              output16[5] = 0x0000;
-              uint32_t rip_len = assemble(&routs, &output[20 + 8],false, 0);
-              output16[1] = rip_len + 28;//total length
-              output16[5] = getChecksum(output,20);
-              output16[12] = rip_len + 8;//UDP length
-              output16[13] = 0;
-              {
-                uint32_t tmp2 = addrs[i] + dst_addr + (17<<16) + rip_len+8 + outputAddr[10] + outputAddr[11];
-                tmp2 = (tmp2>>16) + (tmp2&0xffff);
-                output16[13] = (unsigned short)(~tmp2);
-              }
-              HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
-            }
-            //TODO: print
+          for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+            sendIPPacket(&routs, addrs[i], multicast_address, true);
+            uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
+            HAL_SendIPPacket(i, output, rip_len + 20 + 8, src_mac);
           }
         }
       } else {
