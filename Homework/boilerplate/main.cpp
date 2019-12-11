@@ -20,7 +20,7 @@ void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
     tmp.addr << "\tnexthop:" << 
     tmp.nexthop << "\tlen:" << 
-    tmp.len "\tmetric:" << 
+    tmp.len << "\tmetric:" << 
     tmp.metric << "\tif_Index:" << 
     tmp.if_index << endl;
 }
