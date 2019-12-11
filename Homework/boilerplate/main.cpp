@@ -50,7 +50,7 @@ uint32_t reverseLen(uint32_t len){
   uint32_t re = 0;
   while(len > 0){
     re++;
-    len = len>>1;
+    // len = len>>1;
   }
   return re;
 }
@@ -183,9 +183,9 @@ int main(int argc, char *argv[]) {
     // big endian
     memcpy(&dst_addr, &packet[16], sizeof(in_addr_t));
     memcpy(&src_addr, &packet[12], sizeof(in_addr_t));
-    src_addr = convertEndian(src_addr);
-    dst_addr = convertEndian(dst_addr);
-    cout << "dst_addr " << dst_addr << endl;
+    // src_addr = convertEndian(src_addr);
+    // dst_addr = convertEndian(dst_addr);
+    // cout << "dst_addr " << dst_addr << endl;
     bool dst_is_me = false;
     for (int i = 0; i < N_IFACE_ON_BOARD;i++) {
       if (memcmp(&dst_addr, &addrs[i], sizeof(in_addr_t)) == 0) {
