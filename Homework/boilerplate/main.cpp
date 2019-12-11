@@ -14,7 +14,7 @@ extern bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index);
 extern bool forward(uint8_t *packet, size_t len);
 extern bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output);
 extern uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t dst_addr);
-extern vector<RoutingTableEntry> getRoutingTableEntry();
+extern vector<RoutingTableEntry>* getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
 
 
@@ -85,7 +85,7 @@ uint16_t getChecksum(uint8_t *packet,int leng) {
   unsigned short re = ~check;
   return re;
 }
-  std::vector<RoutingTableEntry>* table;
+std::vector<RoutingTableEntry>* table;
 void updateRipPacket(RipPacket* ripPack){
   table = getRoutingTableEntry();
   ripPack->numEntries = table->size();
