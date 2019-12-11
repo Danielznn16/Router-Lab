@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
     if (time > last_time + 5 * 1000) {
       // cnt time and send rip routing table periodically
       printf("Timer\n");
-      for(int i=0; i<N_IFACE_ON_BOARD; i++) {
+      for(int i=0; i<N_IFACE_ON_BOARD; i++){
         updateRipPacket(&ripPack);
         HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, false) + 20 + 8, multicast_mac_addr);
       }
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
             etr.if_index = if_index;
             cout << "debug";
             printRoutingTableEntry(etr);
-            if(rip.entries[j].metric + 1 > 16){
+            if(etr.metric > 16){
               //delete route
               update(false,etr);
               failers.push_back(etr);
