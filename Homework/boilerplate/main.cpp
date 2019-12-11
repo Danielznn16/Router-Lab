@@ -26,7 +26,8 @@ uint32_t* outputAddr = (uint32_t*)output;
 // 2: 10.0.2.1
 // 3: 10.0.3.1
 // 你可以按需进行修改，注意端序
-in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
+// in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
+in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0203a8c0, 0x0104a8c0, 0x0102000a, 0x0103000a};
 in_addr_t multicast_address = 0x090000e0;
 macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicasting mac address 01:00:5e:00:00:09
 
@@ -75,7 +76,7 @@ void updateRipPacket(RipPacket* ripPack){
   for(int i = 0; i < ripPack->numEntries; i++){
     RipEntry ripE;
     ripE.addr = table.at(i).addr;
-    ripE.mask = __builtin_bswap32 (convertEndian(table.at(i).len));
+    ripE.mask = __builtin_bswap32 (convertEndian(len2(table.at(i).len)));
     ripE.metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
     ripE.nexthop = table.at(i).nexthop;
     ripPack->entries[i] = ripE;
