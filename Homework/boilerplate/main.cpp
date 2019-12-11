@@ -196,7 +196,9 @@ int main(int argc, char *argv[]) {
     if (dst_is_me) {
       // TODO: RIP?
       RipPacket rip;
+        cout << "reached is me\n";
       if (disassemble(packet, res, &rip)) {
+        cout << "reached1\n";
         if (rip.command == 1) {
           // request
           RipPacket resp;
