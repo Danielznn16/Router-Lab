@@ -225,16 +225,16 @@ int main(int argc, char *argv[]) {
           // TODO: use query and updatec
           std::vector<RoutingTableEntry> failers;
           cout << "response reached with rip length" << rip.numEntries << endl;
-          for(int i = 0; i < rip.numEntries; i++){
+          for(int j = 0; j < rip.numEntries; j++){
             RoutingTableEntry etr;
-            etr.addr = rip.entries[i].addr;
-            etr.nexthop = rip.entries[i].nexthop;
-            etr.len = reverseLen(convertEndian(rip.entries[i].mask));
-            etr.metric = rip.entries[i].metric + 1;
+            etr.addr = rip.entries[j].addr;
+            etr.nexthop = rip.entries[j].nexthop;
+            etr.len = reverseLen(convertEndian(rip.entries[j].mask));
+            etr.metric = rip.entries[j].metric + 1;
             etr.if_index = if_index;
             cout << "debug";
             printRoutingTableEntry(etr);
-            if(rip.entries[i].metric + 1 > 16){
+            if(rip.entries[j].metric + 1 > 16){
               //delete route
               update(false,etr);
               failers.push_back(etr);
