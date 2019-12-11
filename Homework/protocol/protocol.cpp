@@ -104,6 +104,11 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer) {
   int num = rip->numEntries;
   
   for(int i = 0;i < num;i ++){
+    RipEntry entry = rip->entries[i];
+    if (split && dst_addr == entry.nexthop)
+    {
+      continue;
+    }
     buffer[4+i*20] = 0x0;
     if(rip->command == 0x2)buffer[i*20+5] = 0x2;
     else buffer[i*20+5] = 0x0;

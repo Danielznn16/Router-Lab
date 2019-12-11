@@ -1,0 +1,58 @@
+sudo ip netns add pc1
+sudo ip netns add pc2
+sudo ip netns add r1
+sudo ip netns add r2
+sudo ip netns add r3
+
+sudo ip link add veth-pc1 type veth peer name veth-r1
+sudo ip link set veth-pc1 netns pc1
+sudo ip link set veth-r1 netns r1
+sudo ip netns exec pc1 ip link set veth-pc1 up
+sudo ip netns exec pc1 ip addr add 192.168.1.2/24 dev veth-pc1
+sudo ip netns exec r1 ip link set veth-r1 up
+sudo ip netns exec r1 ip addr add 192.168.1.1/24 dev veth-r1
+
+sudo ip link add veth-r1-r type veth peer name eth1
+sudo ip link set veth-r1-r netns r1
+sudo ip link set eth1 netns r2
+sudo ip netns exec r1 ip link set veth-r1-r up
+sudo ip netns exec r1 ip addr add 192.168.3.1/24 dev veth-r1-r
+sudo ip netns exec r2 ip link set eth1 up
+sudo ip netns exec r2 ip addr add 192.168.3.2/24 dev eth1
+
+sudo ip link add eth2 type veth peer name veth-r3-l
+sudo ip link set eth2 netns r2
+sudo ip link set veth-r3-l netns r3
+sudo ip netns exec r2 ip link set eth2 up
+sudo ip netns exec r2 ip addr add 192.168.4.1/24 dev eth2
+sudo ip netns exec r3 ip link set veth-r3-l up
+sudo ip netns exec r3 ip addr add 192.168.4.2/24 dev veth-r3-l
+
+sudo ip link add veth-pc2 type veth peer name veth-r3
+sudo ip link set veth-pc2 netns pc2
+sudo ip link set veth-r3 netns r3
+sudo ip netns exec pc2 ip link set veth-pc2 up
+sudo ip netns exec pc2 ip addr add 192.168.5.1/24 dev veth-pc2
+sudo ip netns exec r3 ip link set veth-r3 up
+sudo ip netns exec r3 ip addr add 192.168.5.2/24 dev veth-r3
+
+#bash r1 r3
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
+
+#bash r1
+bird -d -c bird-r1.conf -P ./log/bird-r1.pid -s ./log/bird-r1.socket
+#bash r3
+bird -d -c bird-r3.conf -P ./log/bird-r3.pid -s ./log/bird-r3.socket
+
+
+#BASH r2
+sudo ip a delete 192.168.3.2/24 dev eth1
+sudo ip a delete 192.168.4.1/24 dev eth2
+
+#bash pc1
+sudo ip ro add default via 192.168.1.1 dev veth-pc1
+
+#bash pc2
+sudo ip ro add default via 192.168.5.2 dev veth-pc2
+

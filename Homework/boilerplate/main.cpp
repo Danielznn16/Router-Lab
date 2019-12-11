@@ -15,8 +15,19 @@ extern bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output);
 extern uint32_t assemble(const RipPacket *rip, uint8_t *buffer);
 extern vector<RoutingTableEntry> getRoutingTableEntry();
 bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metric);
+
+void updateRipPacket(RipPacket* ripPack);
+uint32_t len2(uint32_t len);
+uint32_t reverseLen(uint32_t len);
+uint32_t convertEndian(uint32_t tmp);
+uint16_t getChecksum(uint8_t *packet,int leng);
+
+void sendIPPacket(in_addr_t src_addr, in_addr_t dst_addr, bool split);
+
 uint8_t packet[2048];
 uint8_t output[2048];
+uint16_t* output16 = (uint16_t*)output;
+uint32_t* outputAddr = (uint32_t*)output;
 // 0: 10.0.0.1
 // 1: 10.0.1.1
 // 2: 10.0.2.1
@@ -25,43 +36,7 @@ uint8_t output[2048];
 in_addr_t addrs[N_IFACE_ON_BOARD] = {0x0100000a, 0x0101000a, 0x0102000a, 0x0103000a};
 in_addr_t multicast_address = 0x090000e0;
 macaddr_t multicast_mac_addr = {0x01, 0x00, 0x5e, 0x00, 0x00, 0x16}; // multicasting mac address 01:00:5e:00:00:09
-uint32_t len2(uint32_t len){
-  uint32_t re = 0;
-  for(int i = 0; i < 31;i++){
-    re = (re+((i > len-1)?1:0)) << 1;
-  }
-  if(len == 32)
-    re ++;
-  return re;
-}
 
-uint32_t reverseLen(uint32_t len){
-  uint32_t re = 0;
-  while(len > 0){
-    re++;
-    len = len<<1;
-  }
-  return re;
-}
-
-uint32_t convertEndian(uint32_t tmp){
-  uint8_t* re = (uint8_t*)(&tmp);
-  swap(re[0],re[3]);
-  swap(re[1],re[2]);
-  return *((uint32_t*)re);
-}
-
-uint16_t getChecksum(uint8_t *packet,int leng) {
-  // TODO:
-  unsigned long long check = 0;
-  for(unsigned long long tmp = 0; tmp < leng; tmp++){
-    check += (((leng-1) - tmp)%2 == 0)?packet[tmp]:(((int)packet[tmp])<<8);
-  }
-  while((check > (1<<16)))
-    check = (check>>16) + (check&0xffff);
-  unsigned short re = ~check;
-  return re;
-}
 int main(int argc, char *argv[]) {
   int res = HAL_Init(1, addrs);
   if (res < 0) {
@@ -88,71 +63,13 @@ int main(int argc, char *argv[]) {
   uint64_t last_time = 0;
   while (1) {
     uint64_t time = HAL_GetTicks();
-    uint16_t* output16 = (uint16_t*)output;
-    uint32_t* outputAddr = (uint32_t*)output;
     if (time > last_time + 30 * 1000) {
-      // What to do?
+      // cnt time and send rip routing table periodically
       printf("Timer\n");
-
-
-      std::vector<RoutingTableEntry> table = getRoutingTableEntry();
-      RipPacket ripPack;
-      ripPack.numEntries = table.size();
-      ripPack.command = 2;
-      for(int i = 0; i < ripPack.numEntries; i++){
-        RipEntry ripE;
-        ripE.addr = table.at(i).addr;
-        ripE.mask = __builtin_bswap32 (convertEndian(table.at(i).len));
-        ripE.metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
-        ripE.nexthop = table.at(i).nexthop;
-        ripPack.entries[i] = ripE;
-      }
-
-
-      output[0] = 0x45;
-
-      // Differentiated Service Field
-      output[1] = 0x00;
-      
-      // Id
-      output16[2] = 0x0000;
-      
-      // Flags
-      output16[3] = 0x0000;
-
-      // TTL & protocol
-      output16[4] = 0x0111;
-
-      // UDP
-      // port = 520
-      output16[10] = 0x0208;
-
-      // port = 520
-      output16[11] = 0x0208;
-
-      outputAddr[4] = multicast_address;
-
       for(int i=0; i<N_IFACE_ON_BOARD; i++) {
-        // Src addr
-        outputAddr[3] = addrs[i];
-
-        uint32_t rip_len = assemble(&ripPack, &output[20 + 8]);
-
-        // Total Length
-        output16[1] = rip_len+28;
-
-        // UDP len
-        output16[12] = rip_len+8;
-
-        // ip checksum
-        output16[5] = 0x0000;
-        unsigned short sum = getChecksum(output, 20);
-        output16[5] = sum;
-
-        // udp checksum
-        sum = getChecksum(&(output[8]), 8+rip_len);
-        output16[13] = sum;
-        HAL_SendIPPacket(i, output, rip_len + 20 + 8, multicast_mac_addr);
+        RipPacket ripPack;
+        updateRipPacket(&ripPack);
+        sendIPPacket(in_addr_t src_addr, in_addr_t dst_addr, bool split);
       }
       last_time = time;
     }
@@ -440,4 +357,80 @@ int main(int argc, char *argv[]) {
     }
   }
   return 0;
+}
+void updateRipPacket(RipPacket* ripPack){
+  std::vector<RoutingTableEntry> table = getRoutingTableEntry();
+  ripPack->numEntries = table.size();
+  ripPack->command = 2;
+  for(int i = 0; i < ripPack->numEntries; i++){
+    RipEntry ripE;
+    ripE.addr = table.at(i).addr;
+    ripE.mask = __builtin_bswap32 (convertEndian(table.at(i).len));
+    ripE.metric = __builtin_bswap32 (uint32_t(table.at(i).metric));
+    ripE.nexthop = table.at(i).nexthop;
+    ripPack->entries[i] = ripE;
+    }
+}
+uint32_t len2(uint32_t len){
+  uint32_t re = 0;
+  for(int i = 0; i < 31;i++){
+    re = (re+((i > len-1)?1:0)) << 1;
+  }
+  if(len == 32)
+    re ++;
+  return re;
+}
+
+uint32_t reverseLen(uint32_t len){
+  uint32_t re = 0;
+  while(len > 0){
+    re++;
+    len = len<<1;
+  }
+  return re;
+}
+
+uint32_t convertEndian(uint32_t tmp){
+  uint8_t* re = (uint8_t*)(&tmp);
+  swap(re[0],re[3]);
+  swap(re[1],re[2]);
+  return *((uint32_t*)re);
+}
+
+uint16_t getChecksum(uint8_t *packet,int leng) {
+  // TODO:
+  unsigned long long check = 0;
+  for(unsigned long long tmp = 0; tmp < leng; tmp++){
+    check += (((leng-1) - tmp)%2 == 0)?packet[tmp]:(((int)packet[tmp])<<8);
+  }
+  while((check > (1<<16)))
+    check = (check>>16) + (check&0xffff);
+  unsigned short re = ~check;
+  return re;
+}
+
+void sendIPPacket(in_addr_t src_addr, in_addr_t dst_addr, bool split){
+      output[0] = 0x45;
+      // Differentiated Service Field
+      output[1] = 0x00;
+      // Id
+      output16[2] = 0x0000;
+      // Flags
+      output16[3] = 0x0000;
+      // TTL & protocol
+      output16[4] = 0x0111;
+      //checksum
+      output16[5] = 0x0000;
+      output16[13] = 0x0000;
+      // UDP
+      // port = 520
+      output16[10] = 0x0208;
+      output16[11] = 0x0208;
+      outputAddr[4] = multicast_address;
+      uint32_t rip_len = assemble(&ripTable, &output[20 + 8], split, dst_addr);
+      output16[1] = rip_len+28;
+      output16[12] = rip_len+8;
+
+      output16[5] = getChecksum(output, 20);
+      HAL_SendIPPacket(i, output, rip_len + 20 + 8, multicast_mac_addr);
 }
