@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
             etr.metric = rip.entries[i].metric + 1;
             etr.if_index = if_index;
             cout << "debug";
-            // printRoutingTableEntry(etr);
+            printRoutingTableEntry(etr);
             if(rip.entries[i].metric + 1 > 16){
               //delete route
               update(false,etr);
