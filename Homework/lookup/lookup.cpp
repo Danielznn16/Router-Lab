@@ -80,7 +80,7 @@ bool query(uint32_t addr, uint32_t *nexthop, uint32_t *if_index, uint32_t *metri
 		// cout << "addrString: " << addrString << endl;
 		int maxlen = -1;
 		for(int i = 0; i < routs.size(); i++){
-			// cout << "routString: " << routString <<"|"<<(addrString.find(routString)!=-1)<<"|"<<(maxlen < routString.length())<<"|"<<maxlen<<"|"<<routString.length()<< endl;
+			cout << "routMask: " << len2_2(routs.at(i).len)<< endl;
 			if((addr&len2_2(routs.at(i).len)) == (routs.at(i).addr & len2_2(routs.at(i).len))&& maxlen < routs.at(i).len){
 				maxlen = routs.at(i).len;
 				*nexthop = routs.at(i).nexthop;
