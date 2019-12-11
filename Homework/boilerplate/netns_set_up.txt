@@ -36,13 +36,16 @@ sudo ip netns exec pc2 ip addr add 192.168.5.1/24 dev veth-pc2
 sudo ip netns exec r3 ip link set veth-r3 up
 sudo ip netns exec r3 ip addr add 192.168.5.2/24 dev veth-r3
 
-#bash r1 r3
+#bash r1
+cd Desktop
 sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 sudo sysctl -w net.ipv4.ip_forward=1
-
-#bash r1
 bird -d -c bird-r1.conf -P ./log/bird-r1.pid -s ./log/bird-r1.socket
+
 #bash r3
+cd Desktop
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
 bird -d -c bird-r3.conf -P ./log/bird-r3.pid -s ./log/bird-r3.socket
 
 

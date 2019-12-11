@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+#include <iostream>
 using namespace std;
 extern bool validateIPChecksum(uint8_t *packet, size_t len);
 extern void update(bool insert, RoutingTableEntry entry);
@@ -101,7 +102,9 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       outputAddr[4] = multicast_address;
       uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
       output16[1] = rip_len+28;
+      cout << "rip_len" << rip_len + 28 << endl;
       output16[12] = rip_len+8;
+      cout << "rip_len-2" << rip_len + 8 << endl;
 
       output16[5] = getChecksum(output, 20);
       return rip_len;
