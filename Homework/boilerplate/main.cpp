@@ -36,6 +36,15 @@ void printRoutingTableEntry(RoutingTableEntry tmp){
     tmp.metric << "\tif_Index:" << 
     tmp.if_index << endl;
 }
+
+void printRoutingTable(){
+
+    cout << "routing table:\n";
+    for(int k = 0; k < table.size(); k++){
+      cout << "\t";
+      printRoutingTableEntry(table->at(k));
+    }
+}
 uint8_t packet[2048];
 uint8_t output[2048];
 uint16_t* output16 = (uint16_t*)output;
@@ -309,11 +318,7 @@ int main(int argc, char *argv[]) {
             HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
           }
 
-          cout << "routing table:\n";
-          for(int k = 0; k < routs.numEntries; k++){
-            cout << "\t";
-            printRoutingTableEntry(routs.entries[k]);
-          }
+          printRoutingTable();
         }
       // } else {÷
       }
