@@ -103,7 +103,7 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t ds
   buffer[2] = 0x0;
   buffer[3] = 0x0;
   int num = rip->numEntries;
-  
+  int j = 0;
   for(int i = 0;i < num;i ++){
     RipEntry entry = rip->entries[i];
     // if(split){
@@ -113,27 +113,28 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t ds
     {
       continue;
     }
-    buffer[4+i*20] = 0x0;
-    if(rip->command == 0x2)buffer[i*20+5] = 0x2;
-    else buffer[i*20+5] = 0x0;
-    buffer[i*20+6] = 0x0;
-    buffer[i*20+7] = 0x0;
-    buffer[i*20+8] = rip->entries[i].addr;
-    buffer[i*20+9] = rip->entries[i].addr>>8;
-    buffer[i*20+10] = rip->entries[i].addr>>16;
-    buffer[i*20+11] = rip->entries[i].addr>>24;
-    buffer[i*20+12] = rip->entries[i].mask;
-    buffer[i*20+13] = rip->entries[i].mask>>8;
-    buffer[i*20+14] = rip->entries[i].mask>>16;
-    buffer[i*20+15] = rip->entries[i].mask>>24;
-    buffer[i*20+16] = rip->entries[i].nexthop;
-    buffer[i*20+17] = rip->entries[i].nexthop>>8;
-    buffer[i*20+18] = rip->entries[i].nexthop>>16;
-    buffer[i*20+19] = rip->entries[i].nexthop>>24;
-    buffer[i*20+20] = rip->entries[i].metric;
-    buffer[i*20+21] = rip->entries[i].metric>>8;
-    buffer[i*20+22] = rip->entries[i].metric>>16;
-    buffer[i*20+23] = rip->entries[i].metric>>24;
+    buffer[4+j*20] = 0x0;
+    if(rip->command == 0x2)buffer[j*20+5] = 0x2;
+    else buffer[j*20+5] = 0x0;
+    buffer[j*20+6] = 0x0;
+    buffer[j*20+7] = 0x0;
+    buffer[j*20+8] = rip->entries[i].addr;
+    buffer[j*20+9] = rip->entries[i].addr>>8;
+    buffer[j*20+10] = rip->entries[i].addr>>16;
+    buffer[j*20+11] = rip->entries[i].addr>>24;
+    buffer[j*20+12] = rip->entries[i].mask;
+    buffer[j*20+13] = rip->entries[i].mask>>8;
+    buffer[j*20+14] = rip->entries[i].mask>>16;
+    buffer[j*20+15] = rip->entries[i].mask>>24;
+    buffer[j*20+16] = rip->entries[i].nexthop;
+    buffer[j*20+17] = rip->entries[i].nexthop>>8;
+    buffer[j*20+18] = rip->entries[i].nexthop>>16;
+    buffer[j*20+19] = rip->entries[i].nexthop>>24;
+    buffer[j*20+20] = rip->entries[i].metric;
+    buffer[j*20+21] = rip->entries[i].metric>>8;
+    buffer[j*20+22] = rip->entries[i].metric>>16;
+    buffer[j*20+23] = rip->entries[i].metric>>24;
+    j++;
     // cout << "metric" << rip->entries[i].metric << endl;
   }
   return  (rip->numEntries)*20+4;
