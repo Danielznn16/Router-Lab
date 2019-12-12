@@ -106,6 +106,9 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t ds
   
   for(int i = 0;i < num;i ++){
     RipEntry entry = rip->entries[i];
+    // if(split){
+    //   cout << 
+    // }
     if (split && dst_addr == entry.nexthop)
     {
       continue;
