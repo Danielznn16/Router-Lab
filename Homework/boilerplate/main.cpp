@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
       printf("Timer\n");
       for(int i=0; i<N_IFACE_ON_BOARD; i++){
         updateRipPacket(&ripPack);
-        HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, false,0) + 20 + 8, multicast_mac_addr);
+        HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, true,i) + 20 + 8, multicast_mac_addr);
       }
       last_time = time;
     }
