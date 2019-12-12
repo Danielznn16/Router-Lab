@@ -42,7 +42,7 @@ void printRoutingTableEntry(RoutingTableEntry tmp){
 void printRoutingTable(){
 
     cout << "routing table:\n";
-    for(int k = 0; k < table.size(); k++){
+    for(int k = 0; k < table->size(); k++){
       cout << "\t";
       printRoutingTableEntry(table->at(k));
     }
