@@ -96,7 +96,7 @@ bool disassemble(const uint8_t *packet, uint32_t len, RipPacket *output) {
  * 你写入 buffer 的数据长度和返回值都应该是四个字节的 RIP 头，加上每项 20 字节。
  * 需要注意一些没有保存在 RipPacket 结构体内的数据的填写。
  */
-uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t dst_addr) {
+uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t if_index) {
   // TODO:
   buffer[0] = rip->command;
   buffer[1] = 0x2;
@@ -109,7 +109,7 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t ds
     // if(split){
     //   cout << 
     // }
-    if (split && dst_addr == entry.nexthop)
+    if (split && if_index == entry.if_index)
     {
       continue;
     }

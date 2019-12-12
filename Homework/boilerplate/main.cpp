@@ -115,11 +115,12 @@ void updateRipPacket(RipPacket* ripPack){
     ripPack->entries[i].addr = table->at(i).addr & ripPack->entries[i].mask;
     ripPack->entries[i].metric = __builtin_bswap32(uint32_t(table->at(i).metric));
     ripPack->entries[i].nexthop = table->at(i).nexthop;
+    ripPack->entries[i].if_index = table->at(i).if_index;
     // ripPack->entries[i].nexthop = 0;
     }
 }
 
-uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_addr, bool split){
+uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_addr, bool split, uint32_t if_index){
       output[0] = 0x45;
       // Differentiated Service Field
       output[1] = 0x00;
@@ -138,7 +139,7 @@ uint32_t sendIPPacket(RipPacket* ripPackedge, in_addr_t src_addr, in_addr_t dst_
       output16[11] = 0x0802;
       outputAddr[4] = dst_addr;
       outputAddr[3] = src_addr;
-      uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, dst_addr);
+      uint32_t rip_len = assemble(ripPackedge, &output[20 + 8], split, if_index);
       output[2] = (rip_len+28)>>8;
       output[3] = (rip_len+28);
       // cout << "rip_len\t" << rip_len + 28 << endl;
@@ -181,7 +182,7 @@ int main(int argc, char *argv[]) {
       printf("Timer\n");
       for(int i=0; i<N_IFACE_ON_BOARD; i++){
         updateRipPacket(&ripPack);
-        HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, false) + 20 + 8, multicast_mac_addr);
+        HAL_SendIPPacket(i, output, sendIPPacket(&ripPack, addrs[i], multicast_address, false,0) + 20 + 8, multicast_mac_addr);
       }
       last_time = time;
     }
@@ -243,7 +244,7 @@ int main(int argc, char *argv[]) {
           updateRipPacket(&resp);
           // ...
           // RIP
-          uint32_t rip_len = sendIPPacket(&resp, src_addr, dst_addr, true);
+          uint32_t rip_len = sendIPPacket(&resp, src_addr, dst_addr, true, if_index);
           HAL_SendIPPacket(if_index, output, rip_len + 28, src_mac);
         } else {
           // response
@@ -286,15 +287,15 @@ int main(int argc, char *argv[]) {
             fails.entries[i].addr = failers[i].addr;
             fails.entries[i].nexthop = failers[i].nexthop;
             fails.entries[i].mask = convertEndian(len2(failers[i].len));
-            fails.entries[i].metric = convertEndian((uint32_t)1);
+            fails.entries[i].metric = __builtin_bswap32(uint32_t(failers[i].metric));
+            fails.entries[i].if_index = failers[i].if_index;
           }
 
           // //send failures
           if(!failers.empty())
             for(int i = 0; i < N_IFACE_ON_BOARD; i++){
               if(i!= if_index){
-                sendIPPacket(&fails, addrs[i], multicast_address, true);
-                uint32_t rip_len = assemble(&fails, output, true, addrs[i]);
+                uint32_t rip_len = sendIPPacket(&fails, addrs[i], multicast_address, true,i);
                 HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
               }
             }
@@ -304,8 +305,7 @@ int main(int argc, char *argv[]) {
 
           //send Routing
           for(int i = 0; i < N_IFACE_ON_BOARD; i++){
-            sendIPPacket(&routs, addrs[i], multicast_address, true);
-            uint32_t rip_len = assemble(&routs, output, true, addrs[i]);
+            uint32_t rip_len = sendIPPacket(&routs, addrs[i], multicast_address, true,i);
             HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
           }
         }
