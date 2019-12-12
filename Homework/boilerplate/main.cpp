@@ -24,6 +24,8 @@ static RipPacket rip;
 static RipPacket fails;
 static RipPacket routs;
 
+std::vector<RoutingTableEntry>* table;
+
 void printRoutingTableEntry(RoutingTableEntry tmp){
   cout << "addr:" << 
     ((tmp.addr & 0xff000000) >> 24) << "." << 
@@ -113,7 +115,6 @@ uint16_t getChecksum(uint8_t *packet,int leng) {
   unsigned short re = ~check;
   return re;
 }
-std::vector<RoutingTableEntry>* table;
 void updateRipPacket(RipPacket* ripPack){
   table = getRoutingTableEntry();
   ripPack->numEntries = table->size();
