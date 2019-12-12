@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
           cout << "routing table:\n";
           for(int k = 0; k < routs.numEntries; k++){
             cout << "\t";
-            printRoutingTableEntry(routs[k]);
+            printRoutingTableEntry(routs.entries[k]);
           }
         }
       // } else {÷
