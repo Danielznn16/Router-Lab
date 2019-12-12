@@ -316,11 +316,11 @@ int main(int argc, char *argv[]) {
           // //routing table
           // updateRipPacket(&routs);
 
-          // //send Routing
-          // for(int i = 0; i < N_IFACE_ON_BOARD; i++){
-          //   uint32_t rip_len = sendIPPacket(&routs, addrs[i], multicast_address, true,i);
-          //   HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
-          // }
+          //send Routing
+          for(int i = 0; i < N_IFACE_ON_BOARD; i++){
+            uint32_t rip_len = sendIPPacket(&routs, addrs[i], multicast_address, true,i);
+            HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
+          }
 
           cout << "if_index" << if_index << endl;
           printRoutingTable();
