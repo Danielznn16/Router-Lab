@@ -319,6 +319,7 @@ int main(int argc, char *argv[]) {
             HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
           }
 
+          cout << "if_index" << if_index << endl;
           printRoutingTable();
         }
       // } else {÷
