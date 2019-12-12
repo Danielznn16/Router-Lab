@@ -308,6 +308,12 @@ int main(int argc, char *argv[]) {
             uint32_t rip_len = sendIPPacket(&routs, addrs[i], multicast_address, true,i);
             HAL_SendIPPacket(i, output, rip_len+28, multicast_mac_addr);
           }
+
+          cout << "routing table:\n";
+          for(int k = 0; k < routs.size(); k++){
+            cout << "\t";
+            printRoutingTableEntry(routs[i]);
+          }
         }
       // } else {÷
       }
