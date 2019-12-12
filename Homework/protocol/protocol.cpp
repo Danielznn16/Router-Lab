@@ -130,10 +130,10 @@ uint32_t assemble(const RipPacket *rip, uint8_t *buffer, bool split, uint32_t if
     buffer[i*20+22] = rip->entries[i].metric>>16;
     buffer[i*20+23] = rip->entries[i].metric>>24;
     if (split && if_index == entry.if_index){
-      buffer[i*20+20] = 16;
+      buffer[i*20+20] = 0;
       buffer[i*20+21] = 0;
       buffer[i*20+22] = 0;
-      buffer[i*20+23] = 0;
+      buffer[i*20+23] = 16;
     }
     // cout << "metric" << rip->entries[i].metric << endl;
   }
