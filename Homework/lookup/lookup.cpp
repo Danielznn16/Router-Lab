@@ -59,8 +59,7 @@ void update(bool insert, RoutingTableEntry entry) {
 	    }
   }else{
 		for (int i = 0; i < routs.size(); i++){
-	      if (routs.at(i).addr == entry.addr && routs.at(i).len == entry.len && routs.at(i).if_index == entry.if_index)
-	      {
+	      if (routs.at(i).addr == entry.addr && routs.at(i).len == entry.len && routs.at(i).if_index == entry.if_index){
 	        routs.erase(routs.begin() + i);
 	        break;
 	      }
